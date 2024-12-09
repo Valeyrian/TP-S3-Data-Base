@@ -1,0 +1,6 @@
+#supprimer les dossier vs et vscode
+*.vs/
+*.vscode/
+#supprime les .exe et les .bat
+*.exe
+*.bat
