@@ -33,7 +33,33 @@ int Filter_test(Filter *self, char *nodeKey)
 
 Table *Table_createFromCSV(char *csvPath, char *folderPath)
 {
-    // TODO
+	FILE* csvFile = fopen(csvPath, "r");
+	assert(csvFile); 
+
+	Table* table = calloc(1, sizeof(Table)); // Allocation de la table
+
+	 // Vérification de l'allocation de la table
+	fscanf(csvFile, "%[^; ];", table->name); // Lecture du nom de la table
+	fscanf(csvFile, "%d[^; ];", &table->attributeCount); // Lecture du nombre d'attributs 
+	
+	printf("Table : %s\n", table->name); 
+    printf("Nombre d'attributs : %d\n", table->attributeCount);
+
+	table->attributes = (Attribute*)calloc(table->attributeCount, sizeof(Attribute)); // Allocation des attributs de la table
+	assert(table->attributes); 
+	
+    for (int i = 0; i < table->attributeCount; i++)
+    {
+		table->attributes[i].id = i; // Initialisation de l'indice de l'attribut    
+		fscanf(csvFile, "%[^; ];", table->attributes[i].name); // Lecture du nom de l'attribut  
+		fscanf(csvFile, "%d[^; ];", &table->attributes[i].size); // Lecture de la taille de l'attribut  
+        table->attributes[i].index = NULL; // Initialisation de l'index à NULL 
+		
+        printf("Attribut %d : %s\n", i, table->attributes[i].name);
+	}
+	
+    //fscanf(csvFile, "%d[^; ]", table->entryCount); // Lecture du nombre d'entrées
+	
     return NULL;
 }
 

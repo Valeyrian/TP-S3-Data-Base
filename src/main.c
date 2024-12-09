@@ -7,14 +7,14 @@
 #include "Settings.h"
 #include "Table.h"
 
-#if 1
+#if 0
 int main(int argc, char** argv)
 {
     return EXIT_SUCCESS;
 }
 #endif
 
-#if 0
+#if 1
 // Exemple de main() :
 // Création d'une table à partir d'un CSV.
 int main(int argc, char** argv)
