@@ -1,6 +1,6 @@
 #supprimer les dossier vs et vscode
-vs/
-vscode/
+.vs/
+.vscode/
 data/
 _build/
 #supprime les .exe et les .bat
