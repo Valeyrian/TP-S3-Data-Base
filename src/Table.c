@@ -151,18 +151,18 @@ void Table_writeHeader(Table* self) {
 Table *Table_load(char *tblFilename, char *folderPath) {   
     
     // Ouverture du fichier de données en lecture 
-    FILE* header = fopen(tblFilename, "r"); 
-    assert(header); 
+    FILE* tblFile = fopen(tblFilename, "r"); 
+    assert(tblFile); 
 
     // Allocation de la table  
     Table* table = calloc(1, sizeof(Table)); 
     assert(table);
 
     // Lecture du nom de la table   
-    fread(&table->name, sizeof(table->name), sizeof(char), header); 
+    fread(&table->name, sizeof(table->name), sizeof(char), tblFile); 
 
     // Lecture du nombre d'attributs    
-    fread(&table->attributeCount, sizeof(table->attributeCount), sizeof(char), header); 
+    fread(&table->attributeCount, sizeof(table->attributeCount), sizeof(char), tblFile); 
 
     // Allocation des attributs de la table  
     table->attributes = (Attribute*)calloc(table->attributeCount, sizeof(Attribute));  
@@ -170,24 +170,22 @@ Table *Table_load(char *tblFilename, char *folderPath) {
 
     // Allocation d'un pointeur temporaire pour les index des attributs
 	NodePointer* tmp = calloc(1, sizeof(NodePointer)); 
-    for (int i = 0; i < table->attributeCount; i++)
-    {
+    for (int i = 0; i < table->attributeCount; i++) {
         // Lecture du nom de l'attribut  
-        fread(table->attributes[i].name, sizeof(table->attributes[i].name), sizeof(char), header); 
-        fread(&table->attributes[i].size, sizeof(table->attributes[i].size), sizeof(char), header); 
-        fread(&tmp,sizeof(NodePointer), sizeof(char), header);
-        fread(&tmp,sizeof(NodePointer), sizeof(char), header);
+        fread(table->attributes[i].name, sizeof(table->attributes[i].name), sizeof(char), tblFile); 
+        fread(&table->attributes[i].size, sizeof(table->attributes[i].size), sizeof(char), tblFile); 
+        fread(&tmp, sizeof(NodePointer), sizeof(char), tblFile);
+        fread(&tmp, sizeof(NodePointer), sizeof(char), tblFile);
     }
 
     // Lecture du nombre d'entrées 
-	fread(&table->entryCount, sizeof(table->entryCount), sizeof(char), header); 
+	fread(&table->entryCount, sizeof(table->entryCount), sizeof(char), tblFile); 
 	
     // Lecture de l'offset du prochain emplacement libre dans le .dat
-    fread(&table->nextFreePtr, sizeof(table->nextFreePtr), sizeof(char), header); 
+    fread(&table->nextFreePtr, sizeof(table->nextFreePtr), sizeof(char), tblFile); 
 
-	fclose(header);
-	free(tmp); 
-
+    Table_debugPrint(table);
+	fclose(tblFile);
 	return table;
 }
 
@@ -214,18 +212,14 @@ void Table_readEntry(Table *table, Entry *entry, EntryPointer entryPointer)
     for (int i = 0; i < table->attributeCount; i++) {
         Attribute* attribute = table->attributes + i;
         fread(entry->values[i], attribute->size, 1, table->dataFile);
-        // printf("%s;", entry->values[i]);
     }
 }
 
-void Table_destroy(Table *self)
-{
+void Table_destroy(Table *self) {
 	assert(self);   
-	for (int i = 0; i < self->attributeCount; i++)
-    {
-        free(&self->attributes[i]);
-	}
-	free(self->attributes); 
+	for (int i = 0; i < self->attributeCount; i++) free(&self->attributes[i]);
+    fclose(self->dataFile);
+	free(self->attributes);
 	free(self); 
     return;
 }
@@ -247,9 +241,21 @@ void Table_removeEntry(Table *self, EntryPointer entryPtr)
     // TODO
 }
 
-void Table_debugPrint(Table *self)
-{
-    // TODO
+void Table_debugPrint(Table *self) {
+    assert(self);
+
+    printf(" - Table Name : %s\n", self->name);
+    printf(" - Attribute Count : %d\n", self->attributeCount);
+    for (int i = 0; i < self->attributeCount; i++) {
+        printf("  |------------\n");
+        printf("  |  - Attribute Name : %s\n", self->attributes[i].name);
+        printf("  |  - Attribute Size : %llu\n", self->attributes[i].size);
+        printf("  |  - Attribute Index : %lld\n", self->attributes[i].index);
+    }
+    printf("  |------------\n");
+    printf(" - Entry Count : %lld\n", self->entryCount);
+    printf(" - Next Free Pointer : %lld\n", self->nextFreePtr);
+    return;
 }
 
 Entry *Entry_create(Table *table)
@@ -268,13 +274,10 @@ Entry *Entry_create(Table *table)
     return entry;
 }
 
-void Entry_destroy(Entry *self)
-{
+void Entry_destroy(Entry *self) {
     if (!self) return;
     // TODO
 }
 
-void Entry_print(Entry *self)
-{
-    // TODO
+void Entry_print(Entry *self) {
 }

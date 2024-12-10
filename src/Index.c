@@ -107,36 +107,31 @@ void Index_destroy(Index *self)
 
 Index *Index_load(
     Table* table, int attributeIndex, char* folderPath,
-    NodePointer rootPtr, NodePointer nextFreePtr)
+    NodePointer rootPtr, NodePointer nextFreePtr) 
 {
     // TODO
     return NULL;
 }
 
-void Index_insertEntry(Index *self, char *key, EntryPointer entryPtr)
-{
+void Index_insertEntry(Index *self, char *key, EntryPointer entryPtr) {
     // TODO
 }
 
-int64_t Index_getNodeHeight(Index *self, NodePointer nodePtr)
-{
+int64_t Index_getNodeHeight(Index *self, NodePointer nodePtr) {
     // TODO
     return 0;
 }
 
-int Index_getNodeBalance(Index *self, NodePointer nodePtr)
-{
+int Index_getNodeBalance(Index *self, NodePointer nodePtr) {
     // TODO
     return 0;
 }
 
-void Index_updateNode(Index *self, NodePointer nodePtr)
-{
+void Index_updateNode(Index *self, NodePointer nodePtr) {
     // TODO
 }
 
-void Index_setLeftNode(Index *self, NodePointer nodePtr, NodePointer leftPtr)
-{
+void Index_setLeftNode(Index *self, NodePointer nodePtr, NodePointer leftPtr) {
     // Fonction d'exemple
 
     assert(nodePtr != INVALID_POINTER);
@@ -155,13 +150,11 @@ void Index_setLeftNode(Index *self, NodePointer nodePtr, NodePointer leftPtr)
     }
 }
 
-void Index_setRightNode(Index *self, NodePointer nodePtr, NodePointer rightPtr)
-{
+void Index_setRightNode(Index *self, NodePointer nodePtr, NodePointer rightPtr) {
     // TODO
 }
 
-NodePointer Index_getSubtreeMaximum(Index *self, NodePointer nodePtr)
-{
+NodePointer Index_getSubtreeMaximum(Index *self, NodePointer nodePtr) {
     // TODO
     return INVALID_POINTER;
 }
@@ -173,54 +166,45 @@ void Index_replaceChild(
     // TODO
 }
 
-void Index_rotateLeft(Index *self, NodePointer nodePtr)
-{
+void Index_rotateLeft(Index *self, NodePointer nodePtr) {
     assert(nodePtr != INVALID_POINTER);
     // TODO
 }
 
-void Index_rotateRight(Index *self, NodePointer nodePtr)
-{
+void Index_rotateRight(Index *self, NodePointer nodePtr) {
     assert(nodePtr != INVALID_POINTER);
     // TODO
 }
 
-void Index_balance(Index *self, NodePointer nodePtr)
-{
+void Index_balance(Index *self, NodePointer nodePtr) {
     // TODO
 }
 
-NodePointer Index_maximum(Index *self, NodePointer nodePtr)
-{
+NodePointer Index_maximum(Index *self, NodePointer nodePtr) {
     // TODO
     return INVALID_POINTER;
 }
 
-void Index_removeEntry(Index *self, char *key, EntryPointer entryPtr)
-{
+void Index_removeEntry(Index *self, char *key, EntryPointer entryPtr) {
     // TODO
 }
 
-void Index_debugPrint(Index *self, int depth, NodePointer nodePtr)
-{
+void Index_debugPrint(Index *self, int depth, NodePointer nodePtr) {
     if (nodePtr == INVALID_POINTER) return;
     // TODO
 }
 
-void Index_searchRec(Index *self, NodePointer nodePtr, Filter *filter, SetEntry *resultSet)
-{
+void Index_searchRec(Index *self, NodePointer nodePtr, Filter *filter, SetEntry *resultSet) {
     if (nodePtr == INVALID_POINTER) return;
     // TODO
 }
 
-NodePointer Index_searchEntryRec(Index *self, char *key, EntryPointer entryPtr, NodePointer nodePtr)
-{
+NodePointer Index_searchEntryRec(Index *self, char *key, EntryPointer entryPtr, NodePointer nodePtr) {
     if (nodePtr == INVALID_POINTER) return INVALID_POINTER;
     // TODO
     return INVALID_POINTER;
 }
 
-NodePointer Index_searchEntry(Index *self, char *key, EntryPointer entryPtr)
-{
+NodePointer Index_searchEntry(Index *self, char *key, EntryPointer entryPtr) {
     return Index_searchEntryRec(self, key, entryPtr, self->rootPtr);
 }
