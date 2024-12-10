@@ -128,8 +128,27 @@ void Table_writeHeader(Table *self)
 
 Table *Table_load(char *tblFilename, char *folderPath)
 {
-    // TODO
-    return NULL;
+	char tableFilePath[256];
+	snprintf(tableFilePath, sizeof(tableFilePath), "%s/%s", folderPath, tblFilename);
+
+	FILE* header = fopen(tableFilePath, "r"); // Ouverture du fichier de données en lecture
+	assert(header);
+
+	Table* table = calloc(1, sizeof(Table)); // Allocation de la table
+	assert(table);
+
+	fread(&table->name, sizeof(table->name), sizeof(char), header); // Lecture du nom de la table
+	fread(&table->attributeCount, sizeof(table->attributeCount), sizeof(char), header); // Lecture du nombre d'attributs
+    
+	table->attributes = (Attribute*)calloc(table->attributeCount, sizeof(Attribute));  // Allocation des attributs de la table
+
+    for (int i = 1; i < table->attributeCount; i++)
+    {
+		fread(table->attributes[i].name, sizeof(table->attributes[i].name), sizeof(char), header); // Lecture du nom de l'attribut
+		fread(&table->attributes[i].size, sizeof(table->attributes[i].size), sizeof(char), header); 
+		
+    }
+    
 }
 
 void Table_writeEntry(Table *table, Entry *entry, EntryPointer entryPointer)
