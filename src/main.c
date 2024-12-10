@@ -23,8 +23,8 @@ int main(int argc, char** argv)
     char *csvPath = "../data/intro/psittamulgiformes.csv";
 
     Table *table = Table_createFromCSV(csvPath, folderPath);
-    Table_debugPrint(table);
-    Table_destroy(table); table = NULL;
+    // Table_debugPrint(table);
+    // Table_destroy(table); table = NULL;
 
     return EXIT_SUCCESS;
 }
