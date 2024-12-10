@@ -67,6 +67,9 @@ Table *Table_createFromCSV(char *csvPath, char *folderPath) {
         // Lecture des entrées 
         Entry_read(table, entry, csvFile);
 
+		//affichage des entrées
+		Entry_print(entry);
+
         // Ecriture des entrées
         Table_writeEntry(table, entry, entryPointer);
     }
@@ -215,7 +218,8 @@ void Table_readEntry(Table *table, Entry *entry, EntryPointer entryPointer)
     }
 }
 
-void Table_destroy(Table *self) {
+void Table_destroy(Table *self)
+{
 	assert(self);   
 	for (int i = 0; i < self->attributeCount; i++) free(&self->attributes[i]);
     fclose(self->dataFile);
@@ -246,13 +250,16 @@ void Table_debugPrint(Table *self) {
 
     printf(" - Table Name : %s\n", self->name);
     printf(" - Attribute Count : %d\n", self->attributeCount);
-    for (int i = 0; i < self->attributeCount; i++) {
-        printf("  |------------\n");
+
+    for (int i = 0; i < self->attributeCount; i++) 
+    {
+        printf("  T------------\n");
         printf("  |  - Attribute Name : %s\n", self->attributes[i].name);
         printf("  |  - Attribute Size : %llu\n", self->attributes[i].size);
         printf("  |  - Attribute Index : %lld\n", self->attributes[i].index);
     }
-    printf("  |------------\n");
+        printf("  L------------\n");
+
     printf(" - Entry Count : %lld\n", self->entryCount);
     printf(" - Next Free Pointer : %lld\n", self->nextFreePtr);
     return;
@@ -276,8 +283,25 @@ Entry *Entry_create(Table *table)
 
 void Entry_destroy(Entry *self) {
     if (!self) return;
-    // TODO
+    
+	for (int i = 0; i < self->attributeCount; i++) {
+		free(self->values[i]);
+	}
+	free(self);
 }
 
-void Entry_print(Entry *self) {
+void Entry_print(Entry *self)
+{
+	assert(self);
+	printf("\n---------------------\n");
+    printf("Entry : \n");
+	printf("nombre d'attributes : %d\n", self->attributeCount);
+    for (int i = 0; i < self->attributeCount; i++) 
+    {
+		printf("    T------------\n");
+		printf("    |  - %s\n", self->values[i]);
+	}
+	printf("    L------------\n");
+	printf("nextPtr : %lld \n",self->nextFreePtr);
+	return;
 }

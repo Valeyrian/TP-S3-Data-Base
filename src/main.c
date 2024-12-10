@@ -24,7 +24,8 @@ int main(int argc, char** argv)
     char *tblPath = "../data/intro/psittamulgiformes.tbl";
     
 
-    Table* table = Table_load(tblPath, folderPath); // Table_createFromCSV(csvPath, folderPath);
+    ///Table* table = Table_load(tblPath, folderPath); 
+    Table_createFromCSV(csvPath, folderPath);
     // Table_debugPrint(table);
     // Table_destroy(table); table = NULL;
 

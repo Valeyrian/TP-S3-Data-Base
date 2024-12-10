@@ -14,9 +14,7 @@ void Index_updateNode(Index *self, NodePointer nodePtr);
 void Index_setLeftNode(Index *self, NodePointer nodePtr, NodePointer leftPtr);
 void Index_setRightNode(Index *self, NodePointer nodePtr, NodePointer rightPtr);
 NodePointer Index_getSubtreeMaximum(Index *self, NodePointer nodePtr);
-void Index_replaceChild(
-    Index *self, NodePointer parentPtr,
-    NodePointer currChild, NodePointer newChild);
+void Index_replaceChild(Index *self, NodePointer parentPtr, NodePointer currChild, NodePointer newChild);
 void Index_rotateLeft(Index *self, NodePointer nodePtr);
 void Index_rotateRight(Index *self, NodePointer nodePtr);
 void Index_balance(Index *self, NodePointer nodePtr);
@@ -81,7 +79,7 @@ void Index_destroyNode(Index *self, NodePointer nodePtr)
     // TODO
 }
 
-Index *Index_create(Table *table, int attributeIndex, char *folderPath)
+Index *Index_create(Table *table, int attributeIndex, char *folderPath) //de la d
 {
 	Index* index = (Index*)calloc(1, sizeof(Index));
 	assert(index);
@@ -102,15 +100,31 @@ Index *Index_create(Table *table, int attributeIndex, char *folderPath)
 
 void Index_destroy(Index *self)
 {
-    // TODO
+	fclose(self->indexFile);
+	free(self);
 }
 
-Index *Index_load(
-    Table* table, int attributeIndex, char* folderPath,
-    NodePointer rootPtr, NodePointer nextFreePtr) 
+Index *Index_load(Table* table, int attributeIndex, char* folderPath, NodePointer rootPtr, NodePointer nextFreePtr) 
 {
-    // TODO
-    return NULL;
+	char path[256];
+	snprintf(path, sizeof(path), "%s/%s_%d.idx", folderPath, table->name, attributeIndex);
+    FILE* indexFile = fopen(path, "r+b");
+	assert(indexFile);
+
+	Index* index = (Index*)calloc(1, sizeof(Index));
+	assert(index);
+
+	index->table = table;
+	index->attributeIndex = attributeIndex;
+	index->attributeSize = table->attributes[attributeIndex].size;
+	index->rootPtr = rootPtr;
+	index->nextFreePtr = nextFreePtr;   
+	index->indexFile = indexFile;   
+
+	fread(&index->rootPtr, sizeof(index->rootPtr), 1, indexFile);
+	fread(&index->nextFreePtr, sizeof(index->nextFreePtr), 1, indexFile); 
+
+	return index; 
 }
 
 void Index_insertEntry(Index *self, char *key, EntryPointer entryPtr) {
