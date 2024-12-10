@@ -31,99 +31,122 @@ int Filter_test(Filter *self, char *nodeKey)
     return res;
 }
 
-Table *Table_createFromCSV(char *csvPath, char *folderPath)
-{
-	FILE* csvFile = fopen(csvPath, "r");
-	assert(csvFile); 
+Table *Table_createFromCSV(char *csvPath, char *folderPath) {
 
-	Table* table = calloc(1, sizeof(Table)); // Allocation de la table
-	assert(table);
-
-	 // Vérification de l'allocation de la table
-	fscanf(csvFile, "%[^;];", table->name); // Lecture du nom de la table
-	fscanf(csvFile, "%d;", &table->attributeCount); // Lecture du nombre d'attributs 
-	
-
-	table->attributes = (Attribute*)calloc(table->attributeCount, sizeof(Attribute)); // Allocation des attributs de la table
-	assert(table->attributes); 
-
-    for (int i = 0; i < table->attributeCount; i++)
-    {
-		int isIndexed = 0;
-		table->attributes[i].id = i; // Initialisation de l'indice de l'attribut        
-		        
-        fscanf(csvFile, "\n%[^;];", table->attributes[i].name); // Lecture du nom de l'attribut      
-		fscanf(csvFile, "%llu;", &table->attributes[i].size); // Lecture de la taille de l'attribut  
-		fscanf(csvFile, "%d;", &isIndexed); // Lecture de l'index de l'attribut
-        table->attributes[i].index = NULL; // Initialisation de l'index à NULL  
-    }
-	
-    fscanf(csvFile, "\n%llu;",&table->entryCount); // Lecture du nombre d'entrées   
-    table->nextFreePtr = INVALID_POINTER;  
-
-    strcpy(table->folderPath, folderPath); // Copie du chemin du dossier dans la table 
-	 
-    assert(table->folderPath);
-
-	Table_writeHeader(table); // Ecriture de l'en-tête de la table
+    // Creer la table
+    Table* table = calloc(1, sizeof(Table));
+    assert(table);
     
-	char dataFilePath[256];
-	snprintf(dataFilePath, sizeof(dataFilePath), "%s/%s.dat", folderPath, table->name); 
-	table->dataFile = fopen(dataFilePath, "w"); // Ouverture du fichier de données en écriture 
-	assert(table->dataFile); 
+    // Ouvre le fichier csv
+    FILE* csvFile = fopen(csvPath, "r");
+    assert(csvFile);
 
-	for (int i = 0; i < table->entryCount; i++)
-	{
-        fscanf(csvFile, "\n"); 
+    // Lecture du hexader
+    Header_read(table, csvFile);
 
-		Entry* entry = Entry_create(table);   
-		assert(entry);    
-		
-		fseek(table->dataFile, 0, SEEK_END); // Positionnement à la fin du fichier de données
+    // Creation de la table dans le .tbl
+    strcpy(table->folderPath, folderPath);
+    Table_writeHeader(table);
 
-		EntryPointer entryPointer = ftell(table->dataFile); 
-		
-		for (int j = 0; j < table->attributeCount; j++)
-        {
-			fscanf(csvFile, "%[^;];", entry->values[j]); // Lecture des valeurs des attributs   
-			printf("%s\n", entry->values[j]);
-		}
+    // Lecture des entrées 
+    Entry* entry = Entry_create(table);
+
+    // Creation du fichier .dat
+    char fileName[256];
+    snprintf(fileName, 256, "%s/%s.dat", folderPath, table->name);
+    table->dataFile = fopen(fileName, "w");
+
+    assert(table->dataFile);
+    Entry_create(table);
+
+    FSeek(table->dataFile, 0, SEEK_END);
+
+    for (int i = 0; i < table->entryCount; i++) {
+        EntryPointer entryPointer = FTell(table->dataFile);
         
-        Table_writeEntry(table, entry, entryPointer); // Ecriture de l'entrée dans le fichier de données
-		Entry_destroy(entry); // Destruction de l'entrée 
+        // Lecture des entrées 
+        Entry_read(table, entry, csvFile);
+
+        // Ecriture des entrées
+        Table_writeEntry(table, entry, entryPointer);
     }
 
-    fclose(table->dataFile); // Fermeture du fichier de données
-	fclose(csvFile); // Fermeture du fichier CSV
+    fclose(csvFile);
     return NULL;
 }
 
-void Table_writeHeader(Table *self)
-{
-	assert(self);
-    char tableFilePath[256];
-    snprintf(tableFilePath, sizeof(tableFilePath), "%s/%s.tbl", &self->folderPath, &self->name);
-    FILE *header = fopen(tableFilePath, "w");  // Ouverture du fichier de données en écriture    
-    assert(header);    
+void Entry_read(Table* table, Entry* entry, FILE* csvFile) {
+    fscanf(csvFile, "\n");
+    for (int i = 0; i < table->attributeCount; i++) {
+        memset(entry->values[i], 0, table->attributes[i].size);
+        fscanf(csvFile, "%[^;];", entry->values[i]);
+        // printf("(%s);", entry->values[i]);
+    }
+    // printf("\n");
+}
+
+void Header_read(Table* table, FILE* csvFile) {
+    
+    // Lire le nom de la table
+    fscanf(csvFile, "%[^; ];", table->name);
+
+    // Lire le nombre d’attributs 
+    fscanf(csvFile, "%d;", &table->attributeCount);
+    // printf("%s;%d;\n", table->name, table->attributeCount);
+
+    // Lire tous les attributs
+    table->attributes = (Attribute*)calloc(table->attributeCount, sizeof(Attribute));
+    assert(table->attributes);
+
+    for (int i = 0; i < table->attributeCount; i++) {
+        // Lire le nom de l'attribut
+        fscanf(csvFile, "\n%[^; ];", table->attributes[i].name);
+
+        // Lire le nombre d'octet de l'attribut
+        fscanf(csvFile, "%llu;", &table->attributes[i].size);
+
+        // Lire l'index de l'attribut
+        fscanf(csvFile, "%lld;", &table->attributes[i].index);
+
+        // printf("(%s);%d;%d;\n", table->attributes[i].name, table->attributes[i].size, table->attributes[i].index);
+    };
+
+    // Lire le nombre d'entrées
+    fscanf(csvFile, "\n%lld;", &table->entryCount);
+}
+
+void Table_writeData(Table* self) {
+
+}
+
+void Table_writeHeader(Table* self) {
+    // Ouverture du fichier 
+    char fileName[256];
+    snprintf(fileName, 256, "%s/%s.tbl", self->folderPath, self->name);
+    FILE* tblFile = fopen(fileName, "w");
+
+    // Ecriture du nom de la table dans le fichier 
+    fwrite(self->name, MAX_NAME_SIZE, 1, tblFile);
+
+    // Ecriture du nombre d'attribut
+    fwrite(&self->attributeCount, INT, 1, tblFile);
     uint64_t invalidPointer = INVALID_POINTER;
-	
-    fwrite(&self->name,sizeof(self->name), sizeof(char), header);
-	fwrite(&self->attributeCount,sizeof(self->attributeCount), sizeof(char), header);
-	
-    for (int i = 0; i < self->attributeCount; i++)
-    {
-        fwrite(self->attributes[i].name, sizeof(self->attributes[i].name), sizeof(char), header);
-        fwrite(&self->attributes[i].size, sizeof(self->attributes[i].size), sizeof(char), header);
-        fwrite(&invalidPointer, sizeof(invalidPointer),sizeof(char), header);
-        fwrite(&invalidPointer, sizeof(invalidPointer), sizeof(char), header);
+
+    // Ecriture des attributs
+    for (int i = 0; i < self->attributeCount; i++) {
+        fwrite(self->attributes[i].name, MAX_NAME_SIZE, 1, tblFile);
+        fwrite(&self->attributes[i].size, PTR, 1, tblFile);
+        fwrite(&invalidPointer, PTR, 1, tblFile);
+        fwrite(&invalidPointer, PTR, 1, tblFile);
     }
 
-	fwrite(&self->entryCount,sizeof(self->entryCount), sizeof(char), header);
-	fwrite(&invalidPointer,sizeof(invalidPointer), sizeof(char), header);
+    // Ecriture du nombre d'entrées
+    fwrite(&self->attributeCount, PTR, 1, tblFile);
 
-    rewind(header);
-	fclose(header); // Fermeture du fichier de données
-    return;
+    // Ecriture de l'offset du prochain emplacement libre dans le .dat
+    fwrite(&invalidPointer, PTR, 1, tblFile);
+
+    fclose(tblFile);
 }
 
 Table *Table_load(char *tblFilename, char *folderPath)
@@ -139,8 +162,7 @@ void Table_writeEntry(Table *table, Entry *entry, EntryPointer entryPointer)
 
     FSeek(table->dataFile, entryPointer, SEEK_SET);
     fwrite(&(entry->nextFreePtr), sizeof(EntryPointer), 1, table->dataFile);
-    for (int i = 0; i < table->attributeCount; i++)
-    {
+    for (int i = 0; i < table->attributeCount; i++) {
         Attribute* attribute = table->attributes + i;
         fwrite(entry->values[i], attribute->size, 1, table->dataFile);
     }
@@ -153,10 +175,10 @@ void Table_readEntry(Table *table, Entry *entry, EntryPointer entryPointer)
 
     FSeek(table->dataFile, entryPointer, SEEK_SET);
     fread(&(entry->nextFreePtr), sizeof(EntryPointer), 1, table->dataFile);
-    for (int i = 0; i < table->attributeCount; i++)
-    {
+    for (int i = 0; i < table->attributeCount; i++) {
         Attribute* attribute = table->attributes + i;
         fread(entry->values[i], attribute->size, 1, table->dataFile);
+        // printf("%s;", entry->values[i]);
     }
 }
 
@@ -188,34 +210,26 @@ void Table_debugPrint(Table *self)
     // TODO
 }
 
-Entry *Entry_create(Table *table )
+Entry *Entry_create(Table *table)
 {
-	assert(table);
+    Entry* entry = (Entry*)calloc(1, sizeof(Entry));
+    assert(entry);
 
-	Entry* entry = (Entry*)calloc(1, sizeof(Entry));
-	assert(entry);
-	entry->attributeCount = table->attributeCount;
-	entry->nextFreePtr = INVALID_POINTER;
-	entry->values = (char**)calloc(table->attributeCount, sizeof(char*));
-	assert(entry->values);
-	for (int i = 0; i < entry->attributeCount; i++)
-	{
-		entry->values[i] = (char*)calloc(table->attributes[i].size, sizeof(char));
-	}
-	return entry;
+    entry->values = (char**)calloc(table->attributeCount, sizeof(char*));
+    entry->attributeCount = table->attributeCount;
+    entry->nextFreePtr = INVALID_POINTER;
+
+    assert(entry->values);
+    for (int i = 0; i < table->attributeCount; i++) {
+        entry->values[i] = (char*)calloc(1, sizeof(table->attributes[i].size));
+    }
+    return entry;
 }
 
 void Entry_destroy(Entry *self)
 {
     if (!self) return;
-    
-	for (int i = 0; i < self->attributeCount; i++)
-    {
-		free(self->values[i]);
-	}
-	free(self->values); 
-	free(self); 
-    return;
+    // TODO
 }
 
 void Entry_print(Entry *self)
