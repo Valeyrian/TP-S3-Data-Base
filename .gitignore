@@ -1,14 +1,15 @@
-#supprimer les indesirables
+
+#supprimer les dossiers indesirables
 .vs/
 vscode/
 data/
 _build/
 _bin/
+/_bin
 #supprime les .exe et les .bat
 *.exe
 *.bat
 #supprime la liscence
 /LICENCE.md
-/_bin
-/_bin
-/_bin
+
+
