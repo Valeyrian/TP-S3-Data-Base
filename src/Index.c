@@ -83,9 +83,22 @@ void Index_destroyNode(Index *self, NodePointer nodePtr)
 
 Index *Index_create(Table *table, int attributeIndex, char *folderPath)
 {
-    // TODO
-    return NULL;
-}
+	Index* index = (Index*)calloc(1, sizeof(Index));
+	assert(index);
+
+	index->table = table;
+	index->attributeIndex = attributeIndex;
+	index->attributeSize = table->attributes[attributeIndex].size;
+	index->rootPtr = INVALID_POINTER;
+	index->nextFreePtr = INVALID_POINTER;
+    
+
+    char path[256];
+	snprintf(path, sizeof(path), "%s/%s_%d.idx", folderPath,table->name,attributeIndex);
+	index->indexFile = fopen(path, "r+b"); // Ouvre le fichier en lecture et écriture binaire
+	assert(index->indexFile); 
+	return index; 
+ }
 
 void Index_destroy(Index *self)
 {
