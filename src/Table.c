@@ -148,38 +148,47 @@ void Table_writeHeader(Table* self) {
     fclose(tblFile);
 }
 
-Table *Table_load(char *tblFilename, char *folderPath)
-{   
+Table *Table_load(char *tblFilename, char *folderPath) {   
     
-    FILE* header = fopen(tblFilename, "r"); // Ouverture du fichier de données en lecture 
+    // Ouverture du fichier de données en lecture 
+    FILE* header = fopen(tblFilename, "r"); 
     assert(header); 
 
-    Table* table = calloc(1, sizeof(Table)); // Allocation de la table  
+    // Allocation de la table  
+    Table* table = calloc(1, sizeof(Table)); 
     assert(table);
 
-    fread(&table->name, sizeof(table->name), sizeof(char), header); // Lecture du nom de la table   
-    fread(&table->attributeCount, sizeof(table->attributeCount), sizeof(char), header); // Lecture du nombre d'attributs    
+    // Lecture du nom de la table   
+    fread(&table->name, sizeof(table->name), sizeof(char), header); 
 
-    table->attributes = (Attribute*)calloc(table->attributeCount, sizeof(Attribute));  // Allocation des attributs de la table  
+    // Lecture du nombre d'attributs    
+    fread(&table->attributeCount, sizeof(table->attributeCount), sizeof(char), header); 
+
+    // Allocation des attributs de la table  
+    table->attributes = (Attribute*)calloc(table->attributeCount, sizeof(Attribute));  
 	assert(table->attributes);
 
-	NodePointer* tmp = calloc(1, sizeof(NodePointer)); // Allocation d'un pointeur temporaire pour les index des attributs
+    // Allocation d'un pointeur temporaire pour les index des attributs
+	NodePointer* tmp = calloc(1, sizeof(NodePointer)); 
     for (int i = 0; i < table->attributeCount; i++)
     {
-        fread(table->attributes[i].name, sizeof(table->attributes[i].name), sizeof(char), header); // Lecture du nom de l'attribut  
+        // Lecture du nom de l'attribut  
+        fread(table->attributes[i].name, sizeof(table->attributes[i].name), sizeof(char), header); 
         fread(&table->attributes[i].size, sizeof(table->attributes[i].size), sizeof(char), header); 
         fread(&tmp,sizeof(NodePointer), sizeof(char), header);
         fread(&tmp,sizeof(NodePointer), sizeof(char), header);
     }
 
-	fread(&table->entryCount, sizeof(table->entryCount), sizeof(char), header); // Lecture du nombre d'entrées 
-	fread(&table->nextFreePtr, sizeof(table->nextFreePtr), sizeof(char), header); // Lecture de l'offset du prochain emplacement libre dans le .dat
+    // Lecture du nombre d'entrées 
+	fread(&table->entryCount, sizeof(table->entryCount), sizeof(char), header); 
+	
+    // Lecture de l'offset du prochain emplacement libre dans le .dat
+    fread(&table->nextFreePtr, sizeof(table->nextFreePtr), sizeof(char), header); 
 
-	fclose(header); // Fermeture du fichier de données  
+	fclose(header);
 	free(tmp); 
 
-	return table; // Retourne la table
-
+	return table;
 }
 
 void Table_writeEntry(Table *table, Entry *entry, EntryPointer entryPointer)
