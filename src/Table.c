@@ -77,12 +77,11 @@ Table *Table_createFromCSV(char *csvPath, char *folderPath) {
 
 void Entry_read(Table* table, Entry* entry, FILE* csvFile) {
     fscanf(csvFile, "\n");
-    for (int i = 0; i < table->attributeCount; i++) {
+    for (int i = 0; i < table->attributeCount; i++) 
+    {
         memset(entry->values[i], 0, table->attributes[i].size);
         fscanf(csvFile, "%[^;];", entry->values[i]);
-        // printf("(%s);", entry->values[i]);
     }
-    // printf("\n");
 }
 
 void Header_read(Table* table, FILE* csvFile) {
@@ -150,9 +149,36 @@ void Table_writeHeader(Table* self) {
 }
 
 Table *Table_load(char *tblFilename, char *folderPath)
-{
-    // TODO
-    return NULL;
+{   
+    
+    FILE* header = fopen(tblFilename, "r"); // Ouverture du fichier de données en lecture 
+    assert(header); 
+
+    Table* table = calloc(1, sizeof(Table)); // Allocation de la table  
+    assert(table);
+
+    fread(&table->name, sizeof(table->name), sizeof(char), header); // Lecture du nom de la table   
+    fread(&table->attributeCount, sizeof(table->attributeCount), sizeof(char), header); // Lecture du nombre d'attributs    
+
+    table->attributes = (Attribute*)calloc(table->attributeCount, sizeof(Attribute));  // Allocation des attributs de la table  
+	assert(table->attributes);
+
+	NodePointer* tmp = calloc(1, sizeof(NodePointer)); // Allocation d'un pointeur temporaire pour les index des attributs
+    for (int i = 0; i < table->attributeCount; i++)
+    {
+        fread(table->attributes[i].name, sizeof(table->attributes[i].name), sizeof(char), header); // Lecture du nom de l'attribut  
+        fread(&table->attributes[i].size, sizeof(table->attributes[i].size), sizeof(char), header); 
+        fread(&tmp,sizeof(NodePointer), sizeof(char), header);
+        fread(&tmp,sizeof(NodePointer), sizeof(char), header);
+    }
+
+	fread(&table->entryCount, sizeof(table->entryCount), sizeof(char), header); // Lecture du nombre d'entrées 
+	fread(&table->nextFreePtr, sizeof(table->nextFreePtr), sizeof(char), header); // Lecture de l'offset du prochain emplacement libre dans le .dat
+
+	fclose(header); // Fermeture du fichier de données  
+	free(tmp); 
+
+	return table; // Retourne la table
 }
 
 void Table_writeEntry(Table *table, Entry *entry, EntryPointer entryPointer)
@@ -184,8 +210,14 @@ void Table_readEntry(Table *table, Entry *entry, EntryPointer entryPointer)
 
 void Table_destroy(Table *self)
 {
-    if (!self) return;
-    // TODO
+	assert(self);   
+	for (int i = 0; i < self->attributeCount; i++)
+    {
+        free(&self->attributes[i]);
+	}
+	free(self->attributes); 
+	free(self); 
+    return;
 }
 
 void Table_search(Table *self, Filter *filter, SetEntry *resultSet)

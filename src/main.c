@@ -21,8 +21,10 @@ int main(int argc, char** argv)
 {
     char *folderPath = "../data/intro";
     char *csvPath = "../data/intro/psittamulgiformes.csv";
+    char *tblPath = "../data/intro/psittamulgiformes.tbl";
+    
 
-    Table *table = Table_createFromCSV(csvPath, folderPath);
+    Table* table = Table_load(tblPath, folderPath); // Table_createFromCSV(csvPath, folderPath);
     // Table_debugPrint(table);
     // Table_destroy(table); table = NULL;
 
@@ -36,7 +38,7 @@ int main(int argc, char** argv)
 int main(int argc, char** argv)
 {
     char *folderPath = "../data/intro";
-    char *tblFilename = "psittamulgiformes.tbl";
+    char* tblFilename = "psittamulgiformes.tbl";
 
     // Ouverture de la table
     Table *table = Table_load(tblFilename, folderPath);
