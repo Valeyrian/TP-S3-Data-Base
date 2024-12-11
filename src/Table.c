@@ -153,7 +153,7 @@ void Table_writeHeader(Table* self) {
 
 Table *Table_load(char *tblFilename, char *folderPath) 
 {   
-    
+	printf("file path : %s\n", tblFilename);
     // Ouverture du fichier de données en lecture 
     FILE* tblFile = fopen(tblFilename, "r"); 
     assert(tblFile); 
@@ -184,9 +184,12 @@ Table *Table_load(char *tblFilename, char *folderPath)
         fread(table->attributes[i].name, sizeof(table->attributes[i].name), sizeof(char), tblFile); 
         fread(&table->attributes[i].size, sizeof(table->attributes[i].size), sizeof(char), tblFile); 
         
-        if (fread(&tmp, sizeof(NodePointer), sizeof(char), tblFile) <= 0 ) 
-        table->attributes[i].index->rootPtr = INVALID_POINTER;
-		table->attributes[i].index->nextFreePtr = INVALID_POINTER;
+        fread(&tmp, sizeof(NodePointer), sizeof(char), tblFile);
+		fread(&tmp1, sizeof(NodePointer), sizeof(char), tblFile);
+
+        //table->attributes[i].index->rootPtr = INVALID_POINTER;
+		//table->attributes[i].index->nextFreePtr = INVALID_POINTER;
+        
 
         /*    
 		 if (!table->attributes[i].index->rootPtr)
@@ -202,7 +205,6 @@ Table *Table_load(char *tblFilename, char *folderPath)
     // Lecture de l'offset du prochain emplacement libre dans le .dat
     fread(&table->nextFreePtr, sizeof(table->nextFreePtr), sizeof(char), tblFile); 
 
-    Table_debugPrint(table);
 	fclose(tblFile);
 	return table;
 }
@@ -281,7 +283,7 @@ void Table_removeEntry(Table *self, EntryPointer entryPtr) //
 }
 
 void Table_debugPrint(Table *self) {
-    assert(self);
+	if (!self) return;
 
     printf(" - Table Name : %s\n", self->name);
     printf(" - Attribute Count : %d\n", self->attributeCount);

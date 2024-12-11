@@ -23,11 +23,13 @@ int main(int argc, char** argv)
     char* folderPath = "../data/intro";
     char *correctionPath = "../data/intro/correction";
     char *csvPath = "../data/intro/psittamulgiformes.csv";
-    char *tblPath = "../data/intro/correction/psittamulgiformes.tbl";
+    char *tblPath = "../data/intro/psittamulgiformes.tbl";
     
-    Table* table = Table_load(tblPath, correctionPath); 
-    // Table_createFromCSV(csvPath, folderPath);
-    
+    //Table* table = Table_load(tblPath, folderPath); 
+	
+    Table *table = Table_createFromCSV(csvPath, folderPath);
+    Table_debugPrint(table); 
+
     // Table_debugPrint(table);
     // Table_destroy(table); table = NULL;
 
