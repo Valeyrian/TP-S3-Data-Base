@@ -162,8 +162,6 @@ void Index_destroy(Index *self)
  
 Index* Index_load(Table* table, int attributeIndex, char* folderPath, NodePointer rootPtr, NodePointer nextFreePtr)
 {
-
-    
 	char path[256];
 	snprintf(path, sizeof(path), "%s/%s_%d.idx", folderPath, table->name, attributeIndex);
     FILE* indexFile = fopen(path, "r");
@@ -182,7 +180,6 @@ Index* Index_load(Table* table, int attributeIndex, char* folderPath, NodePointe
 
 	IndexNode root; 
 	Index_readNode(index, &root, index->rootPtr);
-	
 	
     fread(&root.leftPtr, PTR, 1, indexFile);
     fread(&root.rightPtr, PTR, 1, indexFile);
@@ -577,7 +574,7 @@ void Index_removeEntry(Index *self, char *key, EntryPointer entryPtr) {
     printf("Clé non trouvée dans l'index.\n"); 
 }
 
-void Index_searchRec(Index * self, NodePointer nodePtr, Filter * filter, SetEntry * resultSet) {
+void Index_searchRec(Table *self, NodePointer nodePtr, Filter *filter, SetEntry *resultSet) {
     if (nodePtr == INVALID_POINTER) return;
 
     IndexNode node;
