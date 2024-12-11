@@ -15,44 +15,44 @@ int main(int argc, char** argv)
 }
 #endif
 
-#if 1
+#if 0
 // Exemple de main() :
 // Création d'une table à partir d'un CSV.
 int main(int argc, char** argv)
 {
-    char* folderPath = "../data/intro";
     char *correctionPath = "../data/intro/correction";
-    char *csvPath = "../data/intro/psittamulgiformes.csv";
-    char *tblPath = "../data/intro/psittamulgiformes.tbl";
-    
-    //Table* table = Table_load(tblPath, folderPath); 
-	
-    Table *table = Table_createFromCSV(csvPath, folderPath);
-    Table_debugPrint(table); 
+    char* folderPath = "../data/intro";
+    char *namePath = "psittamulgiformes";
 
-    // Table_debugPrint(table);
+	  //Table* table = Table_createFromCSV(namePath, folderPath);
+	  //Table_debugPrint(table);
+	
+    //Table* table = Table_load(namePath, folderPath);
+	  //Table_debugPrint(table);
+
     // Table_destroy(table); table = NULL;
 
     return EXIT_SUCCESS;
 }
 #endif
 
-#if 0
+#if 1
 // Exemple de main() :
 // Recherche dans une table sur un attribut indexé
 int main(int argc, char** argv)
 {
-    char *folderPath = "../data/intro";
-    char* tblFilename = "psittamulgiformes.tbl";
+    char* folderPath = "../data/intro";
+    char* namePath = "psittamulgiformes";
 
     // Ouverture de la table
-    Table *table = Table_load(tblFilename, folderPath);
-    Table_debugPrint(table);
+    Table *table = Table_load(namePath, folderPath);
+    // Table_debugPrint(table);
 
     // Création du filtre de la recherche
     Filter filter = { 0 };
-    filter.attributeIndex = 1;
-    filter.key1 = "Ibijau";
+    filter.attributeIndex = 2;
+    filter.key1 = "53";
+    //filter.key2 = "40";
     filter.requestOp = OP_EQ;
 
     // Recherche
@@ -60,25 +60,25 @@ int main(int argc, char** argv)
     Table_search(table, &filter, result);
 
     // Affichage du résultat
-    printf("Result count = %d\n", SetEntry_size(result));
-
     SetEntryIter *it = SetEntryIter_create(result);
     Entry *entry = Entry_create(table);
+    printf("Result count = %d\n", SetEntry_size(result));
     while (SetEntryIter_isValid(it))
     {
-        printf("----\n");
         EntryPointer entryPtr = SetEntryIter_getValue(it);
+        
         Table_readEntry(table, entry, entryPtr);
+        printf("----\n");
         Entry_print(entry);
-
         SetEntryIter_next(it);
     }
-    SetEntryIter_destroy(it); it = NULL;
-    Entry_destroy(entry); entry = NULL;
+    
+    //SetEntryIter_destroy(it); it = NULL;
+    //Entry_destroy(entry); entry = NULL;
 
     // Libération de la mémoire
-    SetEntry_destroy(result); result = NULL;
-    Table_destroy(table); table = NULL;
+    //SetEntry_destroy(result); result = NULL;
+    //Table_destroy(table); table = NULL;
 
     return EXIT_SUCCESS;
 }
