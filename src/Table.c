@@ -179,7 +179,7 @@ Table *Table_load(char *namePath, char *folderPath) {
     // Ouverture du fichier de données en lecture
     char tblName[256];
     snprintf(tblName, 256, "%s/%s.tbl", folderPath, namePath);
-    FILE* tblFile = fopen(tblName, "r");*
+    FILE* tblFile = fopen(tblName, "r");
     assert(tblFile); 
 
     // Allocation de la table  
