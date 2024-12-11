@@ -243,21 +243,41 @@ void Table_destroy(Table *self)
     return;
 }
 
-void Table_search(Table *self, Filter *filter, SetEntry *resultSet)
-{
-    // TODO
+void Table_search(Table *self, Filter *filter, SetEntry *resultSet) {
+
+    // TODO 1
 }
 
-void Table_insertEntry(Table *self, Entry *entry)
-{
+void Table_insertEntry(Table *self, Entry *entry) {
     assert(self && entry);
-    // TODO
+    NodePointer nodePtr = self->nextFreePtr;
+    if (nodePtr != INVALID_POINTER) {
+        // Permet de read le pointeur sur le prochain emplacement libre
+        Entry* freeEntryPtr = Entry_create(self);
+        Table_readEntry(self, freeEntryPtr, nodePtr);
+        self->nextFreePtr = freeEntryPtr->nextFreePtr;
+
+        // Se deplace à l'emplacement libre pour ensuite ecrire l'entry
+        fseek(self->dataFile, nodePtr, SEEK_SET);
+    }
+    else {
+        fseek(self->dataFile, 0, SEEK_END);
+        nodePtr = FTell(self->dataFile);
+    }
+    Table_writeEntry(self, entry, nodePtr);
+
+    // Mettre a jour les index
+     
+    // Mettre a jour le header
+    self->entryCount += 1;
 }
 
 void Table_removeEntry(Table *self, EntryPointer entryPtr) //
 {
     assert(self && entryPtr != INVALID_POINTER);
-    // TODO
+    // TODO 2
+
+    self->entryCount -= 1;
 }
 
 void Table_debugPrint(Table *self) {
@@ -305,6 +325,7 @@ void Entry_destroy(Entry *self) {
 	free(self);
 }
 
+
 void Entry_print(Entry *self)
 {
 	assert(self);
@@ -315,8 +336,9 @@ void Entry_print(Entry *self)
     {
 		printf("    T------------\n");
 		printf("    |  - %s\n", self->values[i]);
-	}
+	  }
 	printf("    L------------\n");
 	printf("nextPtr : %lld \n",self->nextFreePtr);
 	return;
+
 }

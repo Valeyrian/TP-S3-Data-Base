@@ -19,8 +19,7 @@ void Index_rotateLeft(Index *self, NodePointer nodePtr);
 void Index_rotateRight(Index *self, NodePointer nodePtr);
 void Index_balance(Index *self, NodePointer nodePtr);
 
-void Index_readNode(Index *self, IndexNode *indexNode, NodePointer nodePtr)
-{
+void Index_readNode(Index *self, IndexNode *indexNode, NodePointer nodePtr) {
     // NE PAS MODIFIER
     assert(self->indexFile && nodePtr != INVALID_POINTER);
 
@@ -93,19 +92,21 @@ Index *Index_create(Table *table, int attributeIndex, char *folderPath) //de la 
 
     char path[256];
 	snprintf(path, sizeof(path), "%s/%s_%d.idx", folderPath,table->name,attributeIndex);
-	index->indexFile = fopen(path, "r+b"); // Ouvre le fichier en lecture et �criture binaire
+	index->indexFile = fopen(path, "r+b"); // Ouvre le fichier en lecture et écriture binaire
 	assert(index->indexFile); 
 	return index; 
  }
 
 void Index_destroy(Index *self)
 {
+
 	fclose(self->indexFile);
 	free(self);
 }
 
 Index* Index_load(Table* table, int attributeIndex, char* folderPath, NodePointer rootPtr, NodePointer nextFreePtr)
 {
+
     
 	char path[256];
 	snprintf(path, sizeof(path), "%s/%s_%d.idx", folderPath, table->name, attributeIndex);
@@ -151,25 +152,26 @@ Index* Index_load(Table* table, int attributeIndex, char* folderPath, NodePointe
 
 
 	return index;
+
 }
 
 void Index_insertEntry(Index *self, char *key, EntryPointer entryPtr) {
-    // TODO
+    // TODO 
 }
 
 int64_t Index_getNodeHeight(Index *self, NodePointer nodePtr) {
-    // TODO
+    // TODO 1
     return 0;
 }
 
-int Index_getNodeBalance(Index *self, NodePointer nodePtr) // on passe un indexNode sur nodePointer
-{
-    // TODO
+
+int Index_getNodeBalance(Index *self, NodePointer nodePtr) {
+
     return 0;
 }
 
 void Index_updateNode(Index *self, NodePointer nodePtr) {
-    // TODO
+    // TODO 1
 }
 
 void Index_setLeftNode(Index *self, NodePointer nodePtr, NodePointer leftPtr) {
@@ -192,7 +194,19 @@ void Index_setLeftNode(Index *self, NodePointer nodePtr, NodePointer leftPtr) {
 }
 
 void Index_setRightNode(Index *self, NodePointer nodePtr, NodePointer rightPtr) {
-    // TODO
+    assert(nodePtr != INVALID_POINTER);
+
+    IndexNode node;
+    Index_readNode(self, &node, nodePtr);
+    node.leftPtr = rightPtr;
+    Index_writeNode(self, &node, nodePtr);
+
+    if (rightPtr != INVALID_POINTER) {
+        IndexNode right;
+        Index_readNode(self, &right, rightPtr);
+        right.parentPtr = nodePtr;
+        Index_writeNode(self, &right, rightPtr);
+    }
 }
 
 NodePointer Index_getSubtreeMaximum(Index *self, NodePointer nodePtr) {
@@ -209,12 +223,78 @@ void Index_replaceChild(
 
 void Index_rotateLeft(Index *self, NodePointer nodePtr) {
     assert(nodePtr != INVALID_POINTER);
-    // TODO
+
+    IndexNode node;
+    Index_readNode(self, &node, nodePtr);
+
+    // Identifie le fils droit de `node`, qui sera le nouveau pivot
+    IndexNode right;
+    Index_readNode(self, &right, node.rightPtr);
+
+    if (node.rightPtr) {
+        printf("Impossible de tourner à gauche un noeud sans fils droit\n");
+        return; // Abandonne la rotation car elle n'est pas valide
+    }
+
+    // Récupère le parent du nœud actuel pour réorganiser la hiérarchie
+    IndexNode parent;
+    Index_readNode(self, &parent, node.parentPtr);
+
+    // Récupère le sous-arbre gauche du fils droit, qui devra être repositionné
+    IndexNode rightLeft;
+    Index_readNode(self, &rightLeft, right.leftPtr);
+
+    // Remplace `node` par `right` dans la hiérarchie de l'arbre
+    // AbrTree_replaceNode(tree, parent, node, right);
+
+    // `node` devient le fils gauche de `right`
+    right.leftPtr = &node;
+    node.parentPtr = &right; // Mise à jour du parent de `node`
+
+    // Le sous-arbre gauche de `right` devient le sous-arbre droit de `node`
+    node.rightPtr = &rightLeft;
+
+    // Si `rightLeft` existe, son parent doit être mis à jour pour pointer vers `node`
+    if (right.leftPtr) rightLeft.parentPtr = &node;
+    return;
 }
 
 void Index_rotateRight(Index *self, NodePointer nodePtr) {
     assert(nodePtr != INVALID_POINTER);
-    // TODO
+
+    IndexNode node;
+    Index_readNode(self, &node, nodePtr);
+
+    // Identifie le fils droit de `node`, qui sera le nouveau pivot
+    IndexNode left;
+    Index_readNode(self, &left, node.leftPtr);
+
+    if (node.leftPtr) {
+        printf("Impossible de tourner à gauche un noeud sans fils droit\n");
+        return; // Abandonne la rotation car elle n'est pas valide
+    }
+
+    // Récupère le parent du nœud actuel pour réorganiser la hiérarchie
+    IndexNode parent;
+    Index_readNode(self, &parent, node.parentPtr);
+
+    // Récupère le sous-arbre gauche du fils droit, qui devra être repositionné
+    IndexNode leftRight;
+    Index_readNode(self, &leftRight, left.rightPtr);
+
+    // Remplace `node` par `right` dans la hiérarchie de l'arbre
+    // AbrTree_replaceNode(tree, parent, node, right);
+
+    // `node` devient le fils gauche de `right`
+    left.leftPtr = &node;
+    node.parentPtr = &left; // Mise à jour du parent de `node`
+
+    // Le sous-arbre gauche de `right` devient le sous-arbre droit de `node`
+    node.leftPtr = &leftRight;
+
+    // Si `rightLeft` existe, son parent doit être mis à jour pour pointer vers `node`
+    if (left.rightPtr) leftRight.parentPtr = &node;
+    return;
 }
 
 void Index_balance(Index *self, NodePointer nodePtr) {
@@ -230,12 +310,8 @@ void Index_removeEntry(Index *self, char *key, EntryPointer entryPtr) {
     // TODO
 }
 
-void Index_debugPrint(Index *self, int depth, NodePointer nodePtr) {
-    if (nodePtr == INVALID_POINTER) return;
-    // TODO
-}
 
-void Index_searchRec(Index *self, NodePointer nodePtr, Filter *filter, SetEntry *resultSet) {
+void Index_searchRec(x *self, NodePointer nodePtr, Filter *filter, SetEntry *resultSet) {
     if (nodePtr == INVALID_POINTER) return;
     // TODO
 }
@@ -251,4 +327,9 @@ NodePointer Index_searchEntryRec(Index *self, char *key, EntryPointer entryPtr, 
 
 NodePointer Index_searchEntry(Index *self, char *key, EntryPointer entryPtr) {
     return Index_searchEntryRec(self, key, entryPtr, self->rootPtr);
+}
+
+void Index_debugPrint(Index *self, int depth, NodePointer nodePtr) {
+    if (nodePtr == INVALID_POINTER) return;
+    // TODO
 }
