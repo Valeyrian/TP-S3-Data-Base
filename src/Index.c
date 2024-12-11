@@ -285,8 +285,8 @@ int Index_getNodeBalance(Index *self, NodePointer nodePtr)
     assert(nodePtr != INVALID_POINTER);
     IndexNode node; 
     Index_readNode(self, &node, nodePtr);  
-    int hr = 0;
-	int hl = 0;
+    int64_t hr = 0; 
+    int64_t hl = 0; 
 
 	if (node.rightPtr != INVALID_POINTER)
     {
@@ -306,7 +306,7 @@ int Index_getNodeBalance(Index *self, NodePointer nodePtr)
 	else
 		hl = -1;
 
-	return hl - hr; 
+    return (int)(hl - hr);
 }
 
 void Index_updateNode(Index *self, NodePointer nodePtr) {  
@@ -574,7 +574,8 @@ void Index_removeEntry(Index *self, char *key, EntryPointer entryPtr) {
     printf("Clé non trouvée dans l'index.\n"); 
 }
 
-void Index_searchRec(Table *self, NodePointer nodePtr, Filter *filter, SetEntry *resultSet) {
+void Index_searchRec(Index* self, NodePointer nodePtr, Filter* filter, SetEntry* resultSet)
+{
     if (nodePtr == INVALID_POINTER) return;
 
     IndexNode node;
@@ -630,9 +631,9 @@ NodePointer Index_searchEntryRec(Index *self, char *key, EntryPointer entryPtr, 
     if (nodePtr == INVALID_POINTER) return INVALID_POINTER;
 
 	IndexNode node;
+    Index_readNode(self, &node, nodePtr);
 
-
-    int cmp = strcmp(self, &node, nodePtr);
+    int cmp = strcmp(key,node.key);
     if (cmp <0) return Index_searchEntryRec(self, key, entryPtr, node.leftPtr);
     else if (cmp >0) return Index_searchEntryRec(self, key, entryPtr, node.rightPtr);
     else

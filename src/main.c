@@ -50,8 +50,8 @@ int main(int argc, char** argv)
 
     // Création du filtre de la recherche
     Filter filter = { 0 };
-    filter.attributeIndex = 2;
-    filter.key1 = "53";
+    filter.attributeIndex = 1;
+    filter.key1 = "Ibijau";
     //filter.key2 = "40";
     filter.requestOp = OP_EQ;
 
