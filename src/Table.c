@@ -67,6 +67,9 @@ Table *Table_createFromCSV(char *csvPath, char *folderPath) {
         // Lecture des entrées 
         Entry_read(table, entry, csvFile);
 
+		//affichage des entrées
+		Entry_print(entry);
+
         // Ecriture des entrées
         Table_writeEntry(table, entry, entryPointer);
     }
@@ -148,7 +151,8 @@ void Table_writeHeader(Table* self) {
     fclose(tblFile);
 }
 
-Table *Table_load(char *tblFilename, char *folderPath) {   
+Table *Table_load(char *tblFilename, char *folderPath) 
+{   
     
     // Ouverture du fichier de données en lecture 
     FILE* tblFile = fopen(tblFilename, "r"); 
@@ -169,15 +173,29 @@ Table *Table_load(char *tblFilename, char *folderPath) {
 	assert(table->attributes);
 
     // Allocation d'un pointeur temporaire pour les index des attributs
-	NodePointer* tmp = calloc(1, sizeof(NodePointer)); 
-    for (int i = 0; i < table->attributeCount; i++) {
+    NodePointer* tmp = calloc(1, sizeof(NodePointer)); tmp = INVALID_POINTER; 
+	NodePointer* tmp1 = calloc(1, sizeof(NodePointer)); tmp1 = INVALID_POINTER;  
+    
+
+    for (int i = 0; i < table->attributeCount; i++) 
+    {
+        
         // Lecture du nom de l'attribut  
         fread(table->attributes[i].name, sizeof(table->attributes[i].name), sizeof(char), tblFile); 
         fread(&table->attributes[i].size, sizeof(table->attributes[i].size), sizeof(char), tblFile); 
-        fread(&tmp, sizeof(NodePointer), sizeof(char), tblFile);
-        fread(&tmp, sizeof(NodePointer), sizeof(char), tblFile);
-    }
+        
+        if (fread(&tmp, sizeof(NodePointer), sizeof(char), tblFile) <= 0 ) 
+        table->attributes[i].index->rootPtr = INVALID_POINTER;
+		table->attributes[i].index->nextFreePtr = INVALID_POINTER;
 
+        /*    
+		 if (!table->attributes[i].index->rootPtr)
+         {
+			Index *index = Index_load(table, i, folderPath, table->attributes[i].index->rootPtr, table->attributes->index->nextFreePtr);
+		 }
+         */
+    }
+    
     // Lecture du nombre d'entrées 
 	fread(&table->entryCount, sizeof(table->entryCount), sizeof(char), tblFile); 
 	
@@ -215,7 +233,8 @@ void Table_readEntry(Table *table, Entry *entry, EntryPointer entryPointer)
     }
 }
 
-void Table_destroy(Table *self) {
+void Table_destroy(Table *self)
+{
 	assert(self);   
 	for (int i = 0; i < self->attributeCount; i++) free(&self->attributes[i]);
     fclose(self->dataFile);
@@ -253,7 +272,7 @@ void Table_insertEntry(Table *self, Entry *entry) {
     self->entryCount += 1;
 }
 
-void Table_removeEntry(Table *self, EntryPointer entryPtr)
+void Table_removeEntry(Table *self, EntryPointer entryPtr) //
 {
     assert(self && entryPtr != INVALID_POINTER);
     // TODO 2
@@ -266,13 +285,16 @@ void Table_debugPrint(Table *self) {
 
     printf(" - Table Name : %s\n", self->name);
     printf(" - Attribute Count : %d\n", self->attributeCount);
-    for (int i = 0; i < self->attributeCount; i++) {
-        printf("  |------------\n");
+
+    for (int i = 0; i < self->attributeCount; i++) 
+    {
+        printf("  T------------\n");
         printf("  |  - Attribute Name : %s\n", self->attributes[i].name);
         printf("  |  - Attribute Size : %llu\n", self->attributes[i].size);
         printf("  |  - Attribute Index : %lld\n", self->attributes[i].index);
     }
-    printf("  |------------\n");
+        printf("  L------------\n");
+
     printf(" - Entry Count : %lld\n", self->entryCount);
     printf(" - Next Free Pointer : %lld\n", self->nextFreePtr);
     return;
@@ -296,9 +318,27 @@ Entry *Entry_create(Table *table)
 
 void Entry_destroy(Entry *self) {
     if (!self) return;
-    // TODO
+    
+	for (int i = 0; i < self->attributeCount; i++) {
+		free(self->values[i]);
+	}
+	free(self);
 }
 
-void Entry_print(Entry *self) {
+
+void Entry_print(Entry *self)
+{
+	assert(self);
+	printf("\n---------------------\n");
+    printf("Entry : \n");
+	printf("nombre d'attributes : %d\n", self->attributeCount);
+    for (int i = 0; i < self->attributeCount; i++) 
+    {
+		printf("    T------------\n");
+		printf("    |  - %s\n", self->values[i]);
+	  }
+	printf("    L------------\n");
+	printf("nextPtr : %lld \n",self->nextFreePtr);
+	return;
 
 }

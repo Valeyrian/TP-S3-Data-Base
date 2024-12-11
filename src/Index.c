@@ -14,9 +14,7 @@ void Index_updateNode(Index *self, NodePointer nodePtr);
 void Index_setLeftNode(Index *self, NodePointer nodePtr, NodePointer leftPtr);
 void Index_setRightNode(Index *self, NodePointer nodePtr, NodePointer rightPtr);
 NodePointer Index_getSubtreeMaximum(Index *self, NodePointer nodePtr);
-void Index_replaceChild(
-    Index *self, NodePointer parentPtr,
-    NodePointer currChild, NodePointer newChild);
+void Index_replaceChild(Index *self, NodePointer parentPtr, NodePointer currChild, NodePointer newChild);
 void Index_rotateLeft(Index *self, NodePointer nodePtr);
 void Index_rotateRight(Index *self, NodePointer nodePtr);
 void Index_balance(Index *self, NodePointer nodePtr);
@@ -59,7 +57,7 @@ NodePointer Index_createNode(Index *self, char *key, EntryPointer entryPtr)
     if (nodePtr != INVALID_POINTER)
     {
         IndexNode freeNode = { 0 };
-        Index_readNode(self, &freeNode, nodePtr);
+        Index_readNode(self, &freeNode, nodePtr); 
         self->nextFreePtr = freeNode.nextFreePtr;
 
         FSeek(self->indexFile, nodePtr, SEEK_SET);
@@ -80,7 +78,7 @@ void Index_destroyNode(Index *self, NodePointer nodePtr)
     // TODO
 }
 
-Index *Index_create(Table *table, int attributeIndex, char *folderPath)
+Index *Index_create(Table *table, int attributeIndex, char *folderPath) //de la d
 {
 	Index* index = (Index*)calloc(1, sizeof(Index));
 	assert(index);
@@ -94,22 +92,67 @@ Index *Index_create(Table *table, int attributeIndex, char *folderPath)
 
     char path[256];
 	snprintf(path, sizeof(path), "%s/%s_%d.idx", folderPath,table->name,attributeIndex);
-	index->indexFile = fopen(path, "r+b"); // Ouvre le fichier en lecture et écriture binaire
+	index->indexFile = fopen(path, "r+b"); // Ouvre le fichier en lecture et Ã©criture binaire
 	assert(index->indexFile); 
 	return index; 
  }
 
 void Index_destroy(Index *self)
 {
-    // TODO 
+
+	fclose(self->indexFile);
+	free(self);
 }
 
-Index *Index_load(
-    Table* table, int attributeIndex, char* folderPath,
-    NodePointer rootPtr, NodePointer nextFreePtr) 
+Index* Index_load(Table* table, int attributeIndex, char* folderPath, NodePointer rootPtr, NodePointer nextFreePtr)
 {
-    // TODO 0
-    return NULL;
+
+    
+	char path[256];
+	snprintf(path, sizeof(path), "%s/%s_%d.idx", folderPath, table->name, attributeIndex);
+    FILE* indexFile = fopen(path, "r");
+	assert(indexFile);
+
+	Index* index = (Index*)calloc(1, sizeof(Index));
+	assert(index);
+
+	index->table = table;
+	index->attributeIndex = attributeIndex;
+	index->attributeSize = table->attributes[attributeIndex].size;
+	index->indexFile = indexFile;   
+
+    fread(&index->rootPtr, sizeof(index->rootPtr), 1, indexFile); 
+    fread(&index->nextFreePtr, sizeof(index->nextFreePtr), 1, indexFile);
+
+	IndexNode root; 
+	Index_readNode(index, &root, index->rootPtr);
+	
+	
+    fread(&root.leftPtr, PTR, 1, indexFile);
+    fread(&root.rightPtr, PTR, 1, indexFile);
+    fread(&root.height, PTR, 1, indexFile);
+    fread(&root.entryPtr, PTR, 1, indexFile);
+    fread(&root.key, sizeof(table->attributes[attributeIndex]), 1, indexFile);
+	root.entryPtr = INVALID_POINTER; 
+
+	printf("Index loaded\n");
+	printf("Key: %s\n", root.key);
+
+	printf("RootPtr: %lld\n", index->rootPtr);  
+	printf("NextFreePtr: %lld\n", index->nextFreePtr);  
+    printf("AttributeSize: %lld\n", index->attributeSize);  
+	printf("AttributeIndex: %d\n", index->attributeIndex);  
+	printf("Table: %s\n", table->name);
+	printf("Root: %s\n", root.key);
+	printf("Root leftPtr: %lld\n", root.leftPtr);
+	printf("Root rightPtr: %lld\n", root.rightPtr);
+	printf("Root height: %lld\n", root.height);
+	
+    printf("Root entryPtr: %lld\n", root.entryPtr);
+
+
+	return index;
+
 }
 
 void Index_insertEntry(Index *self, char *key, EntryPointer entryPtr) {
@@ -121,8 +164,9 @@ int64_t Index_getNodeHeight(Index *self, NodePointer nodePtr) {
     return 0;
 }
 
+
 int Index_getNodeBalance(Index *self, NodePointer nodePtr) {
-    // TODO 1
+
     return 0;
 }
 
@@ -188,29 +232,29 @@ void Index_rotateLeft(Index *self, NodePointer nodePtr) {
     Index_readNode(self, &right, node.rightPtr);
 
     if (node.rightPtr) {
-        printf("Impossible de tourner à gauche un noeud sans fils droit\n");
+        printf("Impossible de tourner Ã  gauche un noeud sans fils droit\n");
         return; // Abandonne la rotation car elle n'est pas valide
     }
 
-    // Récupère le parent du nœud actuel pour réorganiser la hiérarchie
+    // RÃ©cupÃ¨re le parent du nÅ“ud actuel pour rÃ©organiser la hiÃ©rarchie
     IndexNode parent;
     Index_readNode(self, &parent, node.parentPtr);
 
-    // Récupère le sous-arbre gauche du fils droit, qui devra être repositionné
+    // RÃ©cupÃ¨re le sous-arbre gauche du fils droit, qui devra Ãªtre repositionnÃ©
     IndexNode rightLeft;
     Index_readNode(self, &rightLeft, right.leftPtr);
 
-    // Remplace `node` par `right` dans la hiérarchie de l'arbre
+    // Remplace `node` par `right` dans la hiÃ©rarchie de l'arbre
     // AbrTree_replaceNode(tree, parent, node, right);
 
     // `node` devient le fils gauche de `right`
     right.leftPtr = &node;
-    node.parentPtr = &right; // Mise à jour du parent de `node`
+    node.parentPtr = &right; // Mise Ã  jour du parent de `node`
 
     // Le sous-arbre gauche de `right` devient le sous-arbre droit de `node`
     node.rightPtr = &rightLeft;
 
-    // Si `rightLeft` existe, son parent doit être mis à jour pour pointer vers `node`
+    // Si `rightLeft` existe, son parent doit Ãªtre mis Ã  jour pour pointer vers `node`
     if (right.leftPtr) rightLeft.parentPtr = &node;
     return;
 }
@@ -226,29 +270,29 @@ void Index_rotateRight(Index *self, NodePointer nodePtr) {
     Index_readNode(self, &left, node.leftPtr);
 
     if (node.leftPtr) {
-        printf("Impossible de tourner à gauche un noeud sans fils droit\n");
+        printf("Impossible de tourner Ã  gauche un noeud sans fils droit\n");
         return; // Abandonne la rotation car elle n'est pas valide
     }
 
-    // Récupère le parent du nœud actuel pour réorganiser la hiérarchie
+    // RÃ©cupÃ¨re le parent du nÅ“ud actuel pour rÃ©organiser la hiÃ©rarchie
     IndexNode parent;
     Index_readNode(self, &parent, node.parentPtr);
 
-    // Récupère le sous-arbre gauche du fils droit, qui devra être repositionné
+    // RÃ©cupÃ¨re le sous-arbre gauche du fils droit, qui devra Ãªtre repositionnÃ©
     IndexNode leftRight;
     Index_readNode(self, &leftRight, left.rightPtr);
 
-    // Remplace `node` par `right` dans la hiérarchie de l'arbre
+    // Remplace `node` par `right` dans la hiÃ©rarchie de l'arbre
     // AbrTree_replaceNode(tree, parent, node, right);
 
     // `node` devient le fils gauche de `right`
     left.leftPtr = &node;
-    node.parentPtr = &left; // Mise à jour du parent de `node`
+    node.parentPtr = &left; // Mise Ã  jour du parent de `node`
 
     // Le sous-arbre gauche de `right` devient le sous-arbre droit de `node`
     node.leftPtr = &leftRight;
 
-    // Si `rightLeft` existe, son parent doit être mis à jour pour pointer vers `node`
+    // Si `rightLeft` existe, son parent doit Ãªtre mis Ã  jour pour pointer vers `node`
     if (left.rightPtr) leftRight.parentPtr = &node;
     return;
 }
@@ -272,9 +316,12 @@ void Index_searchRec(x *self, NodePointer nodePtr, Filter *filter, SetEntry *res
     // TODO
 }
 
-NodePointer Index_searchEntryRec(Index *self, char *key, EntryPointer entryPtr, NodePointer nodePtr) {
+NodePointer Index_searchEntryRec(Index *self, char *key, EntryPointer entryPtr, NodePointer nodePtr) 
+{
     if (nodePtr == INVALID_POINTER) return INVALID_POINTER;
-    // TODO
+
+	
+    
     return INVALID_POINTER;
 }
 
