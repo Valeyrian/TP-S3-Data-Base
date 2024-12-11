@@ -24,11 +24,11 @@ int main(int argc, char** argv)
     char* folderPath = "../data/intro";
     char *namePath = "psittamulgiformes";
 
-	//Table* table = Table_createFromCSV(namePath, folderPath);
-	//Table_debugPrint(table);
+	  //Table* table = Table_createFromCSV(namePath, folderPath);
+	  //Table_debugPrint(table);
 	
     //Table* table = Table_load(namePath, folderPath);
-	//Table_debugPrint(table);
+	  //Table_debugPrint(table);
 
     // Table_destroy(table); table = NULL;
 

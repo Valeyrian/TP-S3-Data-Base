@@ -179,7 +179,7 @@ Table *Table_load(char *namePath, char *folderPath) {
     // Ouverture du fichier de données en lecture
     char tblName[256];
     snprintf(tblName, 256, "%s/%s.tbl", folderPath, namePath);
-    FILE* tblFile = fopen(tblName, "r");
+    FILE* tblFile = fopen(tblName, "r");*
     assert(tblFile); 
 
     // Allocation de la table  
@@ -328,7 +328,7 @@ void Table_removeEntry(Table *self, EntryPointer entryPtr) //
 }
 
 void Table_debugPrint(Table *self) {
-    assert(self);
+	if (!self) return;
 
     printf(" - Table Name : %s (path : %s/%s.xxx)\n", self->name, self->folderPath, self->name);
     printf(" - Attribute Count : %d\n", self->attributeCount);
