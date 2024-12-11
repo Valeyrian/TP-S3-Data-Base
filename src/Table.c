@@ -141,7 +141,8 @@ void Header_read(Table* table, FILE* csvFile) {
     fscanf(csvFile, "\n%lld;", &table->entryCount);
 }
 
-void Table_writeData(Table* self) {
+void Table_writeData(Table* self) 
+{
 
 }
 
@@ -376,15 +377,20 @@ void Entry_destroy(Entry *self) {
 
 void Entry_print(Entry *self) {
 	assert(self);
+
 	printf("\n---------------------\n");
     printf("Entry : \n");
 	printf("nombre d'attributes : %d\n", self->attributeCount);
+
     for (int i = 0; i < self->attributeCount; i++) 
     {
 		printf("    T------------\n");
 		printf("    |  - %s\n", self->values[i]);
 	}
-	printf("    L------------\n");
-	printf("nextPtr : %lld \n",self->nextFreePtr);
+
+	    printf("    L------------\n");
+	
+        printf("nextPtr : %lld \n",self->nextFreePtr);
+
 	return;
 }
