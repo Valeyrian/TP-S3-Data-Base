@@ -157,6 +157,7 @@ bool SetEntry_find(SetEntry *self, EntryPointer data, SetEntryNode **res)
     {
         if (data == node->data)
         {
+			// printf("Data : %lld | node->data %lld\n", (long long)data, (long long)node->data);
             *res = node;
             return true;
         }
@@ -248,7 +249,7 @@ SetEntryNode *SetEntry_insert(SetEntry *self, EntryPointer data)
     {
         SetEntryNode_setRight(node, newNode);
     }
-    self->size++;
+    self->size = self->size + 1;
 
     // Equilibre l'arbre à partir du parent du nouveau noeud
     SetEntry_balance(self, node);
