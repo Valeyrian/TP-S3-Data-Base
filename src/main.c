@@ -15,7 +15,7 @@ int main(int argc, char** argv)
 }
 #endif
 
-#if 0
+#if 1
 // Exemple de main() :
 // Création d'une table à partir d'un CSV.
 int main(int argc, char** argv)
@@ -24,11 +24,11 @@ int main(int argc, char** argv)
     char* folderPath = "../data/intro";
     char *namePath = "psittamulgiformes";
 
-	  //Table* table = Table_createFromCSV(namePath, folderPath);
-	  //Table_debugPrint(table);
+	Table* table = Table_createFromCSV(namePath, folderPath);
+	//Table_debugPrint(table);
 	
     //Table* table = Table_load(namePath, folderPath);
-	  //Table_debugPrint(table);
+	//Table_debugPrint(table);
 
     // Table_destroy(table); table = NULL;
 
@@ -36,7 +36,7 @@ int main(int argc, char** argv)
 }
 #endif
 
-#if 1
+#if 0
 // Exemple de main() :
 // Recherche dans une table sur un attribut indexé
 int main(int argc, char** argv)
