@@ -14,7 +14,7 @@ void Index_updateNode(Index *self, NodePointer nodePtr); //fait mais pas sur
 void Index_setLeftNode(Index *self, NodePointer nodePtr, NodePointer leftPtr); //fait
 void Index_setRightNode(Index *self, NodePointer nodePtr, NodePointer rightPtr); //fait
 NodePointer Index_getSubtreeMaximum(Index* self, NodePointer nodePtr); //fait
-void Index_replaceChild(Index *self, NodePointer parentPtr, NodePointer currChild, NodePointer newChild); //fait mais pas sur
+void Index_replaceChild(Index *self, NodePointer parentPtr, NodePointer currChild, NodePointer newChild); //fait 
 void Index_rotateLeft(Index *self, NodePointer nodePtr); //fait
 void Index_rotateRight(Index *self, NodePointer nodePtr); //fait
 void Index_balance(Index* self, NodePointer nodePtr); //fait
@@ -128,21 +128,30 @@ void Index_destroyNode(Index *self, NodePointer nodePtr)
 
 Index *Index_create(Table *table, int attributeIndex, char *folderPath) //de la d
 {
+	char path[256];
+	snprintf(path, sizeof(path), "%s/%s_%d.idx", folderPath, table->name, attributeIndex);
+	FILE* indexFile = fopen(path, "w+");
+	assert(indexFile);
+
 	Index* index = (Index*)calloc(1, sizeof(Index));
 	assert(index);
 
 	index->table = table;
 	index->attributeIndex = attributeIndex;
 	index->attributeSize = table->attributes[attributeIndex].size;
+	index->indexFile = indexFile;
 	index->rootPtr = INVALID_POINTER;
 	index->nextFreePtr = INVALID_POINTER;
-    
 
-    char path[256];
-	snprintf(path, sizeof(path), "%s/%s_%d.idx", folderPath,table->name,attributeIndex);
-	index->indexFile = fopen(path, "r+b"); // Ouvre le fichier en lecture et écriture binaire
-	assert(index->indexFile); 
-	return index; 
+	fwrite(&index->rootPtr, sizeof(index->rootPtr), 1, indexFile);
+	fwrite(&index->nextFreePtr, sizeof(index->nextFreePtr), 1, indexFile);
+
+	printf("Index created\n");
+	printf("Attribute Size: %lld\n", index->attributeSize);
+	printf("Attribute Index: %d\n", index->attributeIndex);
+	printf("Table: %s\n", table->name);
+
+	return index;
  }
 
 void Index_destroy(Index *self)
@@ -651,16 +660,27 @@ void Index_debugPrint(Index *self, int depth, NodePointer nodePtr) {
     IndexNode node;
     Index_readNode(self, &node, nodePtr);
     
-    printf("indexFile : %p\n", (void*)self->indexFile);
-    printf("rootPtr : %lld\n", self->rootPtr);
-    printf("nextFreePtr : %lld\n", self->nextFreePtr);
-    printf("attributeSize : %lld\n", self->attributeSize);
-    printf("attributeIndex : %d\n", self->attributeIndex);
-    printf("depuis la table : %s\n", self->table->name);
+    printf("=== Debug Informations ===\n");
 
-    printf("Root->leftChild %lld\n", node.leftPtr);
-    printf("Root->rightChild %lld\n", node.rightPtr);
-    printf("Root->height %lld\n", node.height);
-    printf("Root->entryPtr %lld\n", node.entryPtr);
-    printf("Root->key %s\n", node.key);
+    printf("---- Index Informations ----\n");
+
+    printf("Table Name: %s\n", self->table->name);
+	printf("Attribute Name: %s\n", self->table->attributes[self->attributeIndex].name);
+    printf("Attribute Size: %lld\n", self->attributeSize);
+    printf("Attribute Index: %d\n", self->attributeIndex);
+    printf("Index File Pointer: %p\n", (void*)self->indexFile);
+    printf("Root Pointer: %lld\n", self->rootPtr);
+    printf("Next Free Pointer: %lld\n", self->nextFreePtr);
+
+	printf("---- Current Node Informations ----\n");
+
+	printf("Node Pointer: %lld\n", nodePtr);
+	printf("Node Parent Pointer: %lld\n", node.parentPtr);
+	printf("Node Left Pointer: %lld\n", node.leftPtr);
+	printf("Node Right Pointer: %lld\n", node.rightPtr);
+	printf("Node Height: %lld\n", node.height);
+	printf("Node Entry Pointer: %lld\n", node.entryPtr);
+	printf("Node Key: %s\n", node.key);
+
+    printf("=========================\n");
 }
