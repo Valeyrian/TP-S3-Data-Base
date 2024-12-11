@@ -151,7 +151,8 @@ void Table_writeHeader(Table* self) {
     fclose(tblFile);
 }
 
-Table *Table_load(char *tblFilename, char *folderPath) {   
+Table *Table_load(char *tblFilename, char *folderPath) 
+{   
     
     // Ouverture du fichier de données en lecture 
     FILE* tblFile = fopen(tblFilename, "r"); 
@@ -172,15 +173,29 @@ Table *Table_load(char *tblFilename, char *folderPath) {
 	assert(table->attributes);
 
     // Allocation d'un pointeur temporaire pour les index des attributs
-	NodePointer* tmp = calloc(1, sizeof(NodePointer)); 
-    for (int i = 0; i < table->attributeCount; i++) {
+    NodePointer* tmp = calloc(1, sizeof(NodePointer)); tmp = INVALID_POINTER; 
+	NodePointer* tmp1 = calloc(1, sizeof(NodePointer)); tmp1 = INVALID_POINTER;  
+    
+
+    for (int i = 0; i < table->attributeCount; i++) 
+    {
+        
         // Lecture du nom de l'attribut  
         fread(table->attributes[i].name, sizeof(table->attributes[i].name), sizeof(char), tblFile); 
         fread(&table->attributes[i].size, sizeof(table->attributes[i].size), sizeof(char), tblFile); 
-        fread(&tmp, sizeof(NodePointer), sizeof(char), tblFile);
-        fread(&tmp, sizeof(NodePointer), sizeof(char), tblFile);
-    }
+        
+        if (fread(&tmp, sizeof(NodePointer), sizeof(char), tblFile) <= 0 ) 
+        table->attributes[i].index->rootPtr = INVALID_POINTER;
+		table->attributes[i].index->nextFreePtr = INVALID_POINTER;
 
+        /*    
+		 if (!table->attributes[i].index->rootPtr)
+         {
+			Index *index = Index_load(table, i, folderPath, table->attributes[i].index->rootPtr, table->attributes->index->nextFreePtr);
+		 }
+         */
+    }
+    
     // Lecture du nombre d'entrées 
 	fread(&table->entryCount, sizeof(table->entryCount), sizeof(char), tblFile); 
 	
@@ -239,7 +254,7 @@ void Table_insertEntry(Table *self, Entry *entry)
     // TODO
 }
 
-void Table_removeEntry(Table *self, EntryPointer entryPtr)
+void Table_removeEntry(Table *self, EntryPointer entryPtr) //
 {
     assert(self && entryPtr != INVALID_POINTER);
     // TODO

@@ -58,7 +58,7 @@ NodePointer Index_createNode(Index *self, char *key, EntryPointer entryPtr)
     if (nodePtr != INVALID_POINTER)
     {
         IndexNode freeNode = { 0 };
-        Index_readNode(self, &freeNode, nodePtr);
+        Index_readNode(self, &freeNode, nodePtr); 
         self->nextFreePtr = freeNode.nextFreePtr;
 
         FSeek(self->indexFile, nodePtr, SEEK_SET);
@@ -104,11 +104,12 @@ void Index_destroy(Index *self)
 	free(self);
 }
 
-Index *Index_load(Table* table, int attributeIndex, char* folderPath, NodePointer rootPtr, NodePointer nextFreePtr) 
+Index* Index_load(Table* table, int attributeIndex, char* folderPath, NodePointer rootPtr, NodePointer nextFreePtr)
 {
+    
 	char path[256];
 	snprintf(path, sizeof(path), "%s/%s_%d.idx", folderPath, table->name, attributeIndex);
-    FILE* indexFile = fopen(path, "r+b");
+    FILE* indexFile = fopen(path, "r");
 	assert(indexFile);
 
 	Index* index = (Index*)calloc(1, sizeof(Index));
@@ -117,14 +118,39 @@ Index *Index_load(Table* table, int attributeIndex, char* folderPath, NodePointe
 	index->table = table;
 	index->attributeIndex = attributeIndex;
 	index->attributeSize = table->attributes[attributeIndex].size;
-	index->rootPtr = rootPtr;
-	index->nextFreePtr = nextFreePtr;   
 	index->indexFile = indexFile;   
 
-	fread(&index->rootPtr, sizeof(index->rootPtr), 1, indexFile);
-	fread(&index->nextFreePtr, sizeof(index->nextFreePtr), 1, indexFile); 
+    fread(&index->rootPtr, sizeof(index->rootPtr), 1, indexFile); 
+    fread(&index->nextFreePtr, sizeof(index->nextFreePtr), 1, indexFile);
 
-	return index; 
+	IndexNode root; 
+	Index_readNode(index, &root, index->rootPtr);
+	
+	
+    fread(&root.leftPtr, PTR, 1, indexFile);
+    fread(&root.rightPtr, PTR, 1, indexFile);
+    fread(&root.height, PTR, 1, indexFile);
+    fread(&root.entryPtr, PTR, 1, indexFile);
+    fread(&root.key, sizeof(table->attributes[attributeIndex]), 1, indexFile);
+	root.entryPtr = INVALID_POINTER; 
+
+	printf("Index loaded\n");
+	printf("Key: %s\n", root.key);
+
+	printf("RootPtr: %lld\n", index->rootPtr);  
+	printf("NextFreePtr: %lld\n", index->nextFreePtr);  
+    printf("AttributeSize: %lld\n", index->attributeSize);  
+	printf("AttributeIndex: %d\n", index->attributeIndex);  
+	printf("Table: %s\n", table->name);
+	printf("Root: %s\n", root.key);
+	printf("Root leftPtr: %lld\n", root.leftPtr);
+	printf("Root rightPtr: %lld\n", root.rightPtr);
+	printf("Root height: %lld\n", root.height);
+	
+    printf("Root entryPtr: %lld\n", root.entryPtr);
+
+
+	return index;
 }
 
 void Index_insertEntry(Index *self, char *key, EntryPointer entryPtr) {
@@ -136,7 +162,8 @@ int64_t Index_getNodeHeight(Index *self, NodePointer nodePtr) {
     return 0;
 }
 
-int Index_getNodeBalance(Index *self, NodePointer nodePtr) {
+int Index_getNodeBalance(Index *self, NodePointer nodePtr) // on passe un indexNode sur nodePointer
+{
     // TODO
     return 0;
 }
@@ -213,9 +240,12 @@ void Index_searchRec(Index *self, NodePointer nodePtr, Filter *filter, SetEntry 
     // TODO
 }
 
-NodePointer Index_searchEntryRec(Index *self, char *key, EntryPointer entryPtr, NodePointer nodePtr) {
+NodePointer Index_searchEntryRec(Index *self, char *key, EntryPointer entryPtr, NodePointer nodePtr) 
+{
     if (nodePtr == INVALID_POINTER) return INVALID_POINTER;
-    // TODO
+
+	
+    
     return INVALID_POINTER;
 }
 
