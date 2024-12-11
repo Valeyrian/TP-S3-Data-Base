@@ -21,8 +21,7 @@ void Index_rotateLeft(Index *self, NodePointer nodePtr);
 void Index_rotateRight(Index *self, NodePointer nodePtr);
 void Index_balance(Index *self, NodePointer nodePtr);
 
-void Index_readNode(Index *self, IndexNode *indexNode, NodePointer nodePtr)
-{
+void Index_readNode(Index *self, IndexNode *indexNode, NodePointer nodePtr) {
     // NE PAS MODIFIER
     assert(self->indexFile && nodePtr != INVALID_POINTER);
 
@@ -102,33 +101,33 @@ Index *Index_create(Table *table, int attributeIndex, char *folderPath)
 
 void Index_destroy(Index *self)
 {
-    // TODO
+    // TODO 
 }
 
 Index *Index_load(
     Table* table, int attributeIndex, char* folderPath,
     NodePointer rootPtr, NodePointer nextFreePtr) 
 {
-    // TODO
+    // TODO 0
     return NULL;
 }
 
 void Index_insertEntry(Index *self, char *key, EntryPointer entryPtr) {
-    // TODO
+    // TODO 
 }
 
 int64_t Index_getNodeHeight(Index *self, NodePointer nodePtr) {
-    // TODO
+    // TODO 1
     return 0;
 }
 
 int Index_getNodeBalance(Index *self, NodePointer nodePtr) {
-    // TODO
+    // TODO 1
     return 0;
 }
 
 void Index_updateNode(Index *self, NodePointer nodePtr) {
-    // TODO
+    // TODO 1
 }
 
 void Index_setLeftNode(Index *self, NodePointer nodePtr, NodePointer leftPtr) {
@@ -268,7 +267,7 @@ void Index_removeEntry(Index *self, char *key, EntryPointer entryPtr) {
 }
 
 
-void Index_searchRec(Index *self, NodePointer nodePtr, Filter *filter, SetEntry *resultSet) {
+void Index_searchRec(x *self, NodePointer nodePtr, Filter *filter, SetEntry *resultSet) {
     if (nodePtr == INVALID_POINTER) return;
     // TODO
 }
