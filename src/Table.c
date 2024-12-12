@@ -106,9 +106,8 @@ Table *Table_createFromCSV(char *namePath, char *folderPath) {
 
     for (int i = 0; i < table->attributeCount; i++) {
         if (isIndex[i] == 1) {
-            printf("Creation du fichier d'index %d : \n", i);
+            printf("\n---------------------------------------------------\n        Creation du fichier d'index %d : \n", i);
             Index* index = Index_create(table, i, folderPath);
-			printf("Index : %lld\n", index);
         }
     }
 
