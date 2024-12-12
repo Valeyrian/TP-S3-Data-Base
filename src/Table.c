@@ -7,6 +7,8 @@
 #include "Table.h"
 #include "Index.h"
 
+int scanfRead;
+
 int Filter_test(Filter *self, char *nodeKey)
 {
     int cmp1 = strcmp(nodeKey, self->key1);  
@@ -67,7 +69,7 @@ Table *Table_createFromCSV(char *namePath, char *folderPath) {
     assert(csvFile);
 
     // Lecture du hexader
-    Header_read(table, csvFile);
+    int* isIndex = Header_read(table, csvFile);
 
     // Creation de la table dans le .tbl
     strcpy(table->folderPath, folderPath);
@@ -88,14 +90,26 @@ Table *Table_createFromCSV(char *namePath, char *folderPath) {
     for (int i = 0; i < table->entryCount; i++) {
         EntryPointer entryPointer = FTell(table->dataFile);
         
-        // Lecture des entrées 
+        // Lecture des entrées
         Entry_read(table, entry, csvFile);
 
 		//affichage des entrées
-		Entry_print(entry);
+		// Entry_print(entry);
 
         // Ecriture des entrées
         Table_writeEntry(table, entry, entryPointer);
+    }
+
+    table->entrySize = 8;
+    for (int i = 0; i < table->attributeCount; i++)
+        table->entrySize += table->attributes[i].size;
+
+    for (int i = 0; i < table->attributeCount; i++) {
+        if (isIndex[i] == 1) {
+            printf("Creation du fichier d'index %d : \n", i);
+            Index* index = Index_create(table, i, folderPath);
+			printf("Index : %lld\n", index);
+        }
     }
 
     fclose(csvFile);
@@ -103,22 +117,25 @@ Table *Table_createFromCSV(char *namePath, char *folderPath) {
 }
 
 void Entry_read(Table* table, Entry* entry, FILE* csvFile) {
-    fscanf(csvFile, "\n");
+    scanfRead = fscanf(csvFile, "\n");
     for (int i = 0; i < table->attributeCount; i++) 
     {
         memset(entry->values[i], 0, table->attributes[i].size);
-        fscanf(csvFile, "%[^;];", entry->values[i]);
+        scanfRead = fscanf(csvFile, "%[^;];", entry->values[i]);
     }
 }
 
-void Header_read(Table* table, FILE* csvFile) {
+int* Header_read(Table* table, FILE* csvFile) {
     
     // Lire le nom de la table
-    fscanf(csvFile, "%[^; ];", table->name);
+    scanfRead = fscanf(csvFile, "%[^; ];", table->name);
 
     // Lire le nombre d’attributs 
-    fscanf(csvFile, "%d;", &table->attributeCount);
-    // printf("%s;%d;\n", table->name, table->attributeCount);
+    scanfRead = fscanf(csvFile, "%d;", &table->attributeCount);
+
+    // Creer le tableau des attributs indéxé
+    int* isIndex = (int*)calloc(table->attributeCount, sizeof(int));
+    assert(isIndex);
 
     // Lire tous les attributs
     table->attributes = (Attribute*)calloc(table->attributeCount, sizeof(Attribute));
@@ -126,19 +143,20 @@ void Header_read(Table* table, FILE* csvFile) {
 
     for (int i = 0; i < table->attributeCount; i++) {
         // Lire le nom de l'attribut
-        fscanf(csvFile, "\n%[^; ];", table->attributes[i].name);
+        scanfRead = fscanf(csvFile, "\n%[^; ];", table->attributes[i].name);
 
         // Lire le nombre d'octet de l'attribut
-        fscanf(csvFile, "%llu;", &table->attributes[i].size);
+        scanfRead = fscanf(csvFile, "%llu;", &table->attributes[i].size);
 
-        // Lire l'index de l'attribut
-        fscanf(csvFile, "%lld;", &table->attributes[i].index);
-
+        // Lire si l'attribut est indéxé
+        scanfRead = fscanf(csvFile, "%d;", &isIndex[i]);
         // printf("(%s);%d;%d;\n", table->attributes[i].name, table->attributes[i].size, table->attributes[i].index);
     };
 
     // Lire le nombre d'entrées
-    fscanf(csvFile, "\n%lld;", &table->entryCount);
+    scanfRead = fscanf(csvFile, "\n%lld;", &table->entryCount);
+
+    return isIndex;
 }
 
 void Table_writeData(Table* self) 
@@ -167,10 +185,9 @@ void Table_writeHeader(Table* self)
         
 		if (self->attributes[i].index) {
 			// creation de l'index
-			printf("Creation de l'index %d\n", i);
-			Index* index = Index_create(self, i, self->folderPath);
-			fwrite(index->rootPtr, PTR, 1, tblFile);
-			fwrite(index->nextFreePtr, PTR, 1, tblFile);
+			// Index* index = Index_create(self, i, self->folderPath);
+			fwrite("1", PTR, 1, tblFile);
+			fwrite("1", PTR, 1, tblFile);
 		}
         else 
         {
@@ -236,7 +253,6 @@ Table *Table_load(char *namePath, char *folderPath) {
         
         // table->attributes[i].index = INVALID_POINTER;
 	    // table->attributes[i].index->nextFreePtr = &tmp;
-
     }
     
 

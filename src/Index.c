@@ -66,6 +66,7 @@ NodePointer Index_createNode(Index *self, char *key, EntryPointer entryPtr)
     {
         FSeek(self->indexFile, 0, SEEK_END);
         nodePtr = FTell(self->indexFile);
+		printf("NodePtr (in createNode): %lld\n", nodePtr);
     }
 
     Index_writeNode(self, &node, nodePtr);
@@ -128,14 +129,17 @@ void Index_destroyNode(Index *self, NodePointer nodePtr)
 
 Index *Index_create(Table *table, int attributeIndex, char *folderPath) 
 {
+	// Creation du fichier d'index
 	char path[256];
 	snprintf(path, sizeof(path), "%s/%s_%d.idx", folderPath, table->name, attributeIndex);
 	FILE* indexFile = fopen(path, "w+");
 
+	// Ouverture du fichier de données
     snprintf(path, sizeof(path), "%s/%s.dat", folderPath, table->name);
 	table->dataFile = fopen(path, "r");
 	assert(indexFile);
 
+	// Initialisation de l'index
 	Index* index = (Index*)calloc(1, sizeof(Index));
 	assert(index);
 
@@ -145,19 +149,18 @@ Index *Index_create(Table *table, int attributeIndex, char *folderPath)
 	index->attributeIndex = attributeIndex;
 	index->attributeSize = table->attributes[attributeIndex].size;
 	index->indexFile = indexFile;
+	if (!index->rootPtr) index->rootPtr = INVALID_POINTER;
 
-    for (int i = 0; i < table->entryCount; i++)
+    for (int i = 0; i < table->entryCount -1; i++)
 	{
         Entry* entry = Entry_create(table);
 		NodePointer offset = i * table->entrySize;
-		printf("Attribute : %d | Entry : %d | Offset: %lld\n", attributeIndex, i, offset);
 		Table_readEntry(table, entry, offset);
 		
+		printf("Attribute : %d | Entry : %d / %s | Offset (de lecture du .dat) : %lld\n", attributeIndex, i, entry->values[attributeIndex], offset);
         Index_insertEntry(index, entry->values[attributeIndex], i * table->entrySize);
-	    //Entry_destroy(entry);
+	    // Entry_destroy(entry);
     }
-
-
 	return index;
  }
 
@@ -217,7 +220,7 @@ Index* Index_load(Table* table, int attributeIndex, char* folderPath, NodePointe
 
 void Index_insertEntry(Index* self, char* key, EntryPointer entryPtr)
 {
-    NodePointer nodePtr = self->rootPtr ? self->rootPtr : INVALID_POINTER;
+    NodePointer nodePtr = self->rootPtr;
     NodePointer parentPtr = INVALID_POINTER;
     IndexNode node;
 
@@ -243,14 +246,15 @@ void Index_insertEntry(Index* self, char* key, EntryPointer entryPtr)
         }
     }
 
+    // Creation d'un noeud
     NodePointer newNodePtr = Index_createNode(self, key, entryPtr);
-	printf("New Node Ptr : %lld\n", newNodePtr);
 
     // Si l'arbre est vide, le nouveau noeud devient la racine
     if (parentPtr == INVALID_POINTER)
     {
-		printf("RootPtr : %llu\n", self->rootPtr);
+        printf("L'arbres est vide : \n");
         self->rootPtr = newNodePtr;
+		printf("    - RootPtr: %lld\n    - newNodePtr : %lld\n", self->rootPtr, newNodePtr);
     }
     else 
     {
@@ -297,8 +301,8 @@ int Index_getNodeBalance(Index *self, NodePointer nodePtr)
     assert(nodePtr != INVALID_POINTER);
     IndexNode node; 
     Index_readNode(self, &node, nodePtr);  
-    int64_t hr = 0; 
-    int64_t hl = 0; 
+    int hr = 0; 
+    int hl = 0; 
 
 	if (node.rightPtr != INVALID_POINTER)
     {
@@ -318,17 +322,18 @@ int Index_getNodeBalance(Index *self, NodePointer nodePtr)
 	else
 		hl = -1;
 
-    return (int)(hl - hr);
+    return (hl - hr);
 }
 
-void Index_updateNode(Index *self, NodePointer nodePtr) {  
+void Index_updateNode(Index *self, NodePointer nodePtr)
+{  
    
    assert(nodePtr != INVALID_POINTER);  
 
-   IndexNode node;  
+   IndexNode node;
    Index_readNode(self, &node, nodePtr);  
    
-   Index_balance(self, nodePtr); 
+  // Index_balance(self, nodePtr); 
    node.height = Index_getNodeHeight(self, nodePtr); 
    
    Index_writeNode(self, &node, nodePtr);  
