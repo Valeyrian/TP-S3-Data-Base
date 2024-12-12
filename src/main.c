@@ -20,25 +20,27 @@ int main(int argc, char** argv)
 // Création d'une table à partir d'un CSV.
 int main(int argc, char** argv)
 {
-    char *correctionPath = "../data/intro/correction";
+    char *correctionPath = "../data/intro/";
     char* folderPath = "../data/intro";
     char *namePath = "psittamulgiformes";
 
+
+	Table* table = Table_createFromCSV(namePath, folderPath);
+	Table_debugPrint(table); 
+	
+    //Table* table = Table_load(namePath, folderPath); 
+	//Table_debugPrint(table); 
+  
+    //Index_create(table, 1, correctionPath);
 
 	//Table* table = Table_createFromCSV(namePath, folderPath);
 	//Table_debugPrint(table);
 	
 
-	Table* table = Table_createFromCSV(namePath, folderPath);
-	//Table_debugPrint(table);
-	
-    //Table* table = Table_load(namePath, folderPath);
-	//Table_debugPrint(table);
-
 
     // Table_destroy(table); table = NULL;
 
-    return EXIT_SUCCESS;
+   // return EXIT_SUCCESS;
 }
 #endif
 

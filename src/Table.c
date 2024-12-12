@@ -92,7 +92,7 @@ Table *Table_createFromCSV(char *namePath, char *folderPath) {
         Entry_read(table, entry, csvFile);
 
 		//affichage des entrées
-		//Entry_print(entry);
+		Entry_print(entry);
 
         // Ecriture des entrées
         Table_writeEntry(table, entry, entryPointer);
@@ -146,7 +146,8 @@ void Table_writeData(Table* self)
 
 }
 
-void Table_writeHeader(Table* self) {
+void Table_writeHeader(Table* self)
+{
     // Ouverture du fichier 
     char fileName[256];
     snprintf(fileName, 256, "%s/%s.tbl", self->folderPath, self->name);
@@ -163,8 +164,19 @@ void Table_writeHeader(Table* self) {
     for (int i = 0; i < self->attributeCount; i++) {
         fwrite(self->attributes[i].name, MAX_NAME_SIZE, 1, tblFile);
         fwrite(&self->attributes[i].size, PTR, 1, tblFile);
-        fwrite(&invalidPointer, PTR, 1, tblFile);
-        fwrite(&invalidPointer, PTR, 1, tblFile);
+        
+		if (self->attributes[i].index) {
+			// creation de l'index
+			printf("Creation de l'index %d\n", i);
+			Index* index = Index_create(self, i, self->folderPath);
+			fwrite(index->rootPtr, PTR, 1, tblFile);
+			fwrite(index->nextFreePtr, PTR, 1, tblFile);
+		}
+        else 
+        {
+            fwrite(&invalidPointer, PTR, 1, tblFile);
+            fwrite(&invalidPointer, PTR, 1, tblFile);
+        }
     }
 
     // Ecriture du nombre d'entrées
@@ -209,20 +221,25 @@ Table *Table_load(char *namePath, char *folderPath) {
         fread(table->attributes[i].name, MAX_INDEX_ATTRIBUTE_SIZE, sizeof(char), tblFile); 
         fread(&table->attributes[i].size, PTR, sizeof(char), tblFile); 
         
-        fread(&tmp, PTR, sizeof(char), tblFile);
-        fread(&tmp, PTR, sizeof(char), tblFile);
+        //fread(&table->attributes[i].index->rootPtr, PTR, sizeof(char), tblFile);
+        //fread(&tmp, PTR, sizeof(char), tblFile); 
+		//printf("root: %llu : \n", table->attributes[i].index->rootPtr);
+      
+		Index* index = (Index*)calloc(1, sizeof(Index));
+		assert(index);
+		index->table = table;
 
-        table->attributes[i].index = INVALID_POINTER;
+		fread(&index->rootPtr, PTR, sizeof(char), tblFile);
+		fread(&index->nextFreePtr, PTR, sizeof(char), tblFile);
+		printf("Root: %llu\n", index->rootPtr);
+        table->attributes[i].index = index; 
+        
+        // table->attributes[i].index = INVALID_POINTER;
 	    // table->attributes[i].index->nextFreePtr = &tmp;
 
-        /*    
-		 if (!table->attributes[i].index->rootPtr)
-         {
-			Index *index = Index_load(table, i, folderPath, table->attributes[i].index->rootPtr, table->attributes->index->nextFreePtr);
-		 }
-         */
     }
     
+
     // Lecture du nombre d'entrées 
 	fread(&table->entryCount, PTR, sizeof(char), tblFile);
 
