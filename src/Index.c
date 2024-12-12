@@ -130,7 +130,7 @@ Index* Index_create(Table* table, int attributeIndex, char* folderPath)
 {
 	// Creation du fichier d'index
 	char path[256];
-	snprintf(path, sizeof(path), "%s/correction/%s_%d.idx", folderPath, table->name, attributeIndex);
+	snprintf(path, sizeof(path), "%s/%s_%d.idx", folderPath, table->name, attributeIndex);
 	FILE* indexFile = fopen(path, "w+");
 
 	// Ouverture du fichier de données
@@ -238,14 +238,14 @@ bool Index_find(Index* self, char* key, NodePointer* parentPtr) {
 
 		if (cmp < 0) {
 			printf("	- ParentPtr : %llu\n", *parentPtr);
-			nodePtr = node.leftPtr;
 			if (node.leftPtr == INVALID_POINTER) return false;
+			nodePtr = node.leftPtr;
 		}
 
 		else {
 			printf("	- ParentPtr : %llu\n", *parentPtr);
-			nodePtr = node.rightPtr;
 			if (node.leftPtr == INVALID_POINTER) return false;
+			nodePtr = node.rightPtr;
 		}
 	}
 }
@@ -276,12 +276,12 @@ void Index_insertEntry(Index* self, char* key, EntryPointer entryPtr) {
 		int cmp = strcmp(key, parentNode.key);
 
 		if (cmp <= 0) {
-			Index_setLeftNode(self, newNodePtr, parentPtr);
+			Index_setLeftNode(self, parentPtr, newNodePtr);
 			printf("	- New left node \n");
 		}
 
 		else {
-			Index_setRightNode(self, newNodePtr, parentPtr);
+			Index_setRightNode(self, parentPtr, newNodePtr);
 			printf("	- New right node \n");
 		}
 	}
@@ -351,38 +351,39 @@ void Index_updateNode(Index* self, NodePointer nodePtr)
 	Index_writeNode(self, &node, nodePtr);
 }
 
-void Index_setLeftNode(Index* self, NodePointer childPtr, NodePointer parentPtr) {
+void Index_setLeftNode(Index* self, NodePointer parentPtr, NodePointer childPtr) {
 	assert(childPtr != INVALID_POINTER);
 
-	IndexNode child;
-	Index_readNode(self, &child, childPtr);
-	child.leftPtr = parentPtr;
-	Index_writeNode(self, &child, childPtr);
+	IndexNode parent;
+	Index_readNode(self, &parent, parentPtr);
+	parent.leftPtr = parentPtr;
+	Index_writeNode(self, &parent, childPtr);
 
 	if (parentPtr != INVALID_POINTER)
 	{
-		IndexNode parent;
-		Index_readNode(self, &parent, parentPtr);
-		parent.parentPtr = childPtr;
-		printf("	- Child : %s | Parent : %s | ParentPtr : %lld\n", child.key, parent.key, parentPtr);
-		Index_writeNode(self, &parent, parentPtr);
+		IndexNode child;
+		Index_readNode(self, &child, childPtr);
+		child.parentPtr = parentPtr;
+		printf("	- Parent : %s | Child : %s | ChildPtr : %lld\n", parent.key, child.key, childPtr);
+		Index_writeNode(self, &child, childPtr);
 	}
 }
 
-void Index_setRightNode(Index* self, NodePointer childPtr, NodePointer parentPtr) {
+void Index_setRightNode(Index* self, NodePointer parentPtr, NodePointer childPtr) {
 	assert(childPtr != INVALID_POINTER);
 
-	IndexNode child;
-	Index_readNode(self, &child, childPtr);
-	child.rightPtr = parentPtr;
-	Index_writeNode(self, &child, childPtr);
+	IndexNode parent;
+	Index_readNode(self, &parent, parentPtr);
+	parent.rightPtr = parentPtr;
+	Index_writeNode(self, &parent, parentPtr);
 
-	if (parentPtr != INVALID_POINTER) {
-		IndexNode parent;
-		Index_readNode(self, &parent, parentPtr);
-		parent.parentPtr = childPtr;
-		printf("	- Child : %s | Parent : %s | ParentPtr : %lld\n", child.key, parent.key, parentPtr);
-		Index_writeNode(self, &parent, parentPtr);
+	if (parentPtr != INVALID_POINTER)
+	{
+		IndexNode child;
+		Index_readNode(self, &child, childPtr);
+		child.parentPtr = childPtr;
+		printf("	- Parent : %s | Child : %s | ChildPtr : %lld\n", parent.key, child.key, childPtr);
+		Index_writeNode(self, &child, childPtr);
 	}
 }
 
