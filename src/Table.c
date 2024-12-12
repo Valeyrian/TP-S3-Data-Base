@@ -93,7 +93,7 @@ Table *Table_createFromCSV(char *namePath, char *folderPath) {
         // Lecture des entrées
         Entry_read(table, entry, csvFile);
 
-		//affichage des entrées
+		// Affichage des entrées
 		// Entry_print(entry);
 
         // Ecriture des entrées
