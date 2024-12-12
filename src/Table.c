@@ -167,8 +167,8 @@ void Table_writeData(Table* self)
 void Table_writeHeader(Table* self)
 {
     // Ouverture du fichier 
-    char fileName[256];
-    snprintf(fileName, 256, "%s/%s.tbl", self->folderPath, self->name);
+    char fileName[648];
+    snprintf(fileName, 648, "%s/%s.tbl", self->folderPath, self->name);
     FILE* tblFile = fopen(fileName, "w");
 
     // Ecriture du nom de la table dans le fichier 
@@ -398,13 +398,13 @@ Entry *Entry_create(Table *table)
     return entry;
 }
 
-void Entry_destroy(Entry *self) {
-    if (!self) return;
-    
-	for (int i = 0; i < self->attributeCount; i++) {
-		free(self->values[i]);
-	}
-	free(self);
+void Entry_destroy(Entry *self) {  
+   assert(self);  
+   for (int i = 0; i < self->attributeCount; i++) {  
+       free(self->values[i]);  
+   }  
+   free(self->values);   
+   free(self);   
 }
 
 
