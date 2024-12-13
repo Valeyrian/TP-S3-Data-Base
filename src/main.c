@@ -7,6 +7,7 @@
 #include "Settings.h"
 #include "Table.h"
 #include "Index.h"
+#include "Menu.h" 
 
 #if 0
 int main(int argc, char** argv)
@@ -15,7 +16,27 @@ int main(int argc, char** argv)
 }
 #endif
 
+
 #if 1
+
+int main()
+{
+    
+    int isEndending = 1;
+    
+    /*while (isEndending)
+    {
+
+    }*/
+    return;
+}
+
+
+
+
+#endif
+
+#if 0
 // Exemple de main() :
 // Création d'une table à partir d'un CSV.
 int main(int argc, char** argv)

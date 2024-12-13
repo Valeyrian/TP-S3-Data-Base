@@ -286,20 +286,16 @@ void Index_insertEntry(Index* self, char* key, EntryPointer entryPtr)
 	}
 
 
-	//// Mettre à jour les parents et équilibrer l'arbre
-    /*NodePointer currentPtr = newNodePtr;	
-	while (parentPtr != INVALID_POINTER) 
-	{
-		Index_updateNode(self, parentPtr); 
-
-
-		Index_balance(self, parentPtr); 
-		currentPtr = parentPtr; 
-		Index_readNode(self, &node, currentPtr); 
-		parentPtr = node.parentPtr; 
-	} */
-
-
+//	//// Mettre à jour les parents et équilibrer l'arbre
+//    NodePointer currentPtr = newNodePtr;	
+//	while (parentPtr != INVALID_POINTER) 
+//	{
+//		Index_updateNode(self, parentPtr); 
+//		Index_balance(self, parentPtr); 
+//		currentPtr = parentPtr; 
+//		Index_readNode(self, &node, currentPtr); 
+//		parentPtr = node.parentPtr; 
+//	} 
 }
 
 int64_t Index_getNodeHeight(Index* self, NodePointer nodePtr)
