@@ -131,16 +131,14 @@ Index* Index_create(Table* table, int attributeIndex, char* folderPath)
 	// Creation du fichier d'index
 	char path[256];
 	snprintf(path, sizeof(path), "%s/%s_%d.idx", folderPath, table->name, attributeIndex);
-	FILE* indexFile = fopen(path, "w+");
+	FILE* indexFile = fopen(path, "wb+");
+	AssertNew(indexFile);
 
 	// Ouverture du fichier de données
-	snprintf(path, sizeof(path), "%s/correction/%s.dat", folderPath, table->name);
-	table->dataFile = fopen(path, "r");
-	assert(indexFile);
 
 	// Initialisation de l'index
 	Index* index = (Index*)calloc(1, sizeof(Index));
-	assert(index);
+	AssertNew(index);
 
 	assert(table);
 
@@ -149,18 +147,18 @@ Index* Index_create(Table* table, int attributeIndex, char* folderPath)
 	index->attributeSize = table->attributes[attributeIndex].size;
 	index->indexFile = indexFile;
 	index->nextFreePtr = INVALID_POINTER;
-	if (!index->rootPtr) index->rootPtr = INVALID_POINTER;
+	index->rootPtr = INVALID_POINTER;
 
+	Entry* entry = Entry_create(table);
 	for (int i = 0; i < table->entryCount; i++) {
-		Entry* entry = Entry_create(table);
-		NodePointer offset = i * table->entrySize;
+		EntryPointer offset = i * table->entrySize;
 		Table_readEntry(table, entry, offset);
 
 		printf("\n\nEntry : %d / %s | Offset (de lecture du .dat) : %lld\n", i, entry->values[attributeIndex], offset);
 		Index_insertEntry(index, entry->values[attributeIndex], offset);
 
-		//Entry_destroy(entry);
 	}
+	Entry_destroy(entry);
 
 	printf("\n\nPrint de l'arbre (prefixe) : \n");
 	Index_printRec(index, index->rootPtr);
@@ -178,7 +176,7 @@ Index* Index_load(Table* table, int attributeIndex, char* folderPath, NodePointe
 {
 	char path[256];
 	snprintf(path, sizeof(path), "%s/%s_%d.idx", folderPath, table->name, attributeIndex);
-	FILE* indexFile = fopen(path, "r");
+	FILE* indexFile = fopen(path, "rb+");
 	assert(indexFile);
 
 	Index* index = (Index*)calloc(1, sizeof(Index));
@@ -228,7 +226,7 @@ bool Index_find(Index* self, char* key, NodePointer* parentPtr) {
 	NodePointer nodePtr = self->rootPtr;
 
 	// Si l'arbre est vide
-	if (self->rootPtr == INVALID_POINTER) {
+	if (nodePtr == INVALID_POINTER) {
 		*parentPtr = INVALID_POINTER;
 		return false;
 	}
@@ -238,9 +236,9 @@ bool Index_find(Index* self, char* key, NodePointer* parentPtr) {
 		Index_readNode(self, &node, nodePtr);
 
 		int cmp = strcmp(key, node.key);
-		if (!cmp) return true;
+		if (cmp == 0) return true;
 
-		if (cmp < 0) {
+		else if (cmp < 0) {
 			if (node.leftPtr == INVALID_POINTER) return false;
 			nodePtr = node.leftPtr;
 		}
@@ -271,6 +269,7 @@ void Index_insertEntry(Index* self, char* key, EntryPointer entryPtr) {
 	if (parentPtr == INVALID_POINTER) {
 		self->rootPtr = newNodePtr;
 		printf("	- RootPtr: %lld\n	- newNodePtr : %lld\n", self->rootPtr, newNodePtr);
+		return;
 	}
 
 	else {
@@ -289,7 +288,7 @@ void Index_insertEntry(Index* self, char* key, EntryPointer entryPtr) {
 	}
 
 	Index_balance(self, newNodePtr);
-	Index_updateNode(self, newNodePtr);
+	return;
 }
 
 int64_t Index_getNodeHeight(Index* self, NodePointer nodePtr)
@@ -382,8 +381,8 @@ void Index_replaceChild(Index* self, NodePointer parentPtr, NodePointer currChil
 	if (parentPtr == INVALID_POINTER) {
 		self->rootPtr = newChildPtr;
 	}
-
-	else {
+	else
+	{
 		IndexNode parent;
 		Index_readNode(self, &parent, parentPtr);
 
@@ -392,6 +391,8 @@ void Index_replaceChild(Index* self, NodePointer parentPtr, NodePointer currChil
 
 		else if (parent.rightPtr == currChildPtr) 
 			parent.rightPtr = newChildPtr;
+		else
+			assert(false);
 
 		Index_writeNode(self, &parent, parentPtr);
 	}
@@ -447,15 +448,15 @@ void Index_rotateRight(Index* self, NodePointer nodePtr) {
 }
 
 void Index_balance(Index* self, NodePointer nodePtr) {
-	IndexNode node;
-	NodePointer parentPtr;
 
 	while (nodePtr != INVALID_POINTER) {
-		Index_readNode(self, &node, nodePtr);
 		Index_updateNode(self, nodePtr);
 
 		int balance = Index_getNodeBalance(self, nodePtr);
-		parentPtr = node.parentPtr;
+
+		IndexNode node;
+		Index_readNode(self, &node, nodePtr);
+		NodePointer parentPtr = node.parentPtr;
 
 		if (balance == 2) {
 			if (Index_getNodeBalance(self, node.rightPtr) == -1) {

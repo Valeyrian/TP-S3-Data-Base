@@ -73,14 +73,13 @@ Table *Table_createFromCSV(char *namePath, char *folderPath) {
 
     // Creation de la table dans le .tbl
     strcpy(table->folderPath, folderPath);
-    Table_writeHeader(table);
 
     // Lecture des entrées 
     Entry* entry = Entry_create(table);
 
     // Creation du fichier .dat
     snprintf(fileName, 256, "%s/%s.dat", folderPath, namePath);
-    table->dataFile = fopen(fileName, "w");
+    table->dataFile = fopen(fileName, "wb+");
 
     assert(table->dataFile);
     Entry_create(table);
@@ -112,6 +111,7 @@ Table *Table_createFromCSV(char *namePath, char *folderPath) {
     }
 
     fclose(csvFile);
+    Table_writeHeader(table);
     return table;
 }
 
@@ -168,7 +168,7 @@ void Table_writeHeader(Table* self)
     // Ouverture du fichier 
     char fileName[648];
     snprintf(fileName, 648, "%s/%s.tbl", self->folderPath, self->name);
-    FILE* tblFile = fopen(fileName, "w");
+    FILE* tblFile = fopen(fileName, "wb");
 
     // Ecriture du nom de la table dans le fichier 
     fwrite(self->name, MAX_NAME_SIZE, 1, tblFile);
@@ -208,7 +208,7 @@ Table *Table_load(char *namePath, char *folderPath) {
     // Ouverture du fichier de données en lecture
     char tblName[256];
     snprintf(tblName, 256, "%s/%s.tbl", folderPath, namePath);
-    FILE* tblFile = fopen(tblName, "r");
+    FILE* tblFile = fopen(tblName, "rb");
     assert(tblFile); 
 
     // Allocation de la table  
@@ -269,7 +269,7 @@ Table *Table_load(char *namePath, char *folderPath) {
     // Ouverture du fichier .dat
     char datFile[256];
     snprintf(datFile, 256, "%s/%s.dat", folderPath, table->name);
-    table->dataFile = fopen(datFile, "r+b");
+    table->dataFile = fopen(datFile, "rb+");
 
 	fclose(tblFile);
     //Table_debugPrint(table);
