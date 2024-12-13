@@ -21,7 +21,7 @@ void Index_balance(Index* self, NodePointer nodePtr); //fait
 
 void Index_readNode(Index* self, IndexNode* indexNode, NodePointer nodePtr) {
 	// NE PAS MODIFIER
-	assert(self->indexFile && nodePtr != INVALID_POINTER);
+	assert("Read node error : " && self->indexFile && nodePtr != INVALID_POINTER);
 
 	FSeek(self->indexFile, nodePtr, SEEK_SET);
 	size_t size = sizeof(IndexNode) - MAX_INDEX_ATTRIBUTE_SIZE + self->attributeSize;
@@ -32,7 +32,7 @@ void Index_readNode(Index* self, IndexNode* indexNode, NodePointer nodePtr) {
 void Index_writeNode(Index* self, IndexNode* indexNode, NodePointer nodePtr)
 {
 	// NE PAS MODIFIER
-	assert(self->indexFile && nodePtr != INVALID_POINTER);
+	assert("Write node error : " && self->indexFile && nodePtr != INVALID_POINTER);
 
 	FSeek(self->indexFile, nodePtr, SEEK_SET);
 	size_t size = sizeof(IndexNode) - MAX_INDEX_ATTRIBUTE_SIZE + self->attributeSize;
@@ -161,6 +161,8 @@ Index* Index_create(Table* table, int attributeIndex, char* folderPath)
 
 		//Entry_destroy(entry);
 	}
+	printf("\n\nPrint de l'arbre (prefixe) : \n");
+	// Index_printRec(index, 0);
 	return index;
 }
 
@@ -244,7 +246,7 @@ bool Index_find(Index* self, char* key, NodePointer* parentPtr) {
 
 		else {
 			printf("	- ParentPtr : %llu\n", *parentPtr);
-			if (node.leftPtr == INVALID_POINTER) return false;
+			if (node.rightPtr == INVALID_POINTER) return false;
 			nodePtr = node.rightPtr;
 		}
 	}
@@ -352,14 +354,13 @@ void Index_updateNode(Index* self, NodePointer nodePtr)
 }
 
 void Index_setLeftNode(Index* self, NodePointer parentPtr, NodePointer childPtr) {
-	assert(childPtr != INVALID_POINTER);
-
+	assert(parentPtr != INVALID_POINTER);
 	IndexNode parent;
 	Index_readNode(self, &parent, parentPtr);
-	parent.leftPtr = parentPtr;
-	Index_writeNode(self, &parent, childPtr);
+	parent.leftPtr = childPtr;
+	Index_writeNode(self, &parent, parentPtr);
 
-	if (parentPtr != INVALID_POINTER)
+	if (childPtr != INVALID_POINTER)
 	{
 		IndexNode child;
 		Index_readNode(self, &child, childPtr);
@@ -370,25 +371,23 @@ void Index_setLeftNode(Index* self, NodePointer parentPtr, NodePointer childPtr)
 }
 
 void Index_setRightNode(Index* self, NodePointer parentPtr, NodePointer childPtr) {
-	assert(childPtr != INVALID_POINTER);
-
+	assert(parentPtr != INVALID_POINTER);
 	IndexNode parent;
 	Index_readNode(self, &parent, parentPtr);
-	parent.rightPtr = parentPtr;
+	parent.rightPtr = childPtr;
 	Index_writeNode(self, &parent, parentPtr);
 
-	if (parentPtr != INVALID_POINTER)
+	if (childPtr != INVALID_POINTER)
 	{
 		IndexNode child;
 		Index_readNode(self, &child, childPtr);
-		child.parentPtr = childPtr;
+		child.parentPtr = parentPtr;
 		printf("	- Parent : %s | Child : %s | ChildPtr : %lld\n", parent.key, child.key, childPtr);
 		Index_writeNode(self, &child, childPtr);
 	}
 }
 
-NodePointer Index_getSubtreeMaximum(Index* self, NodePointer nodePtr)
-{
+NodePointer Index_getSubtreeMaximum(Index* self, NodePointer nodePtr) {
 	assert(nodePtr != INVALID_POINTER);
 
 	IndexNode node;
@@ -711,4 +710,15 @@ void Index_debugPrint(Index* self, int depth, NodePointer nodePtr) {
 	printf("Node Key: %s\n", node.key);
 
 	printf("=========================\n");
+}
+
+void Index_printRec(Index* self, NodePointer nodePtr) {
+	// Open file
+	IndexNode node;
+	Index_readNode(self, &node, nodePtr);
+	printf("[%s] ", node.key);
+	if (node.leftPtr) Index_printRec(self, node.leftPtr);
+	if (node.rightPtr) Index_printRec(self, node.rightPtr);
+
+	return;
 }
