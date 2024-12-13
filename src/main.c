@@ -25,6 +25,8 @@ int main(int argc, char** argv)
     char *namePath = "psittamulgiformes";
 
 	Table* table = Table_createFromCSV(namePath, folderPath);
+    free(table);
+    
 	// Table_debugPrint(table); 
 	
     //Table* table = Table_load(namePath, folderPath); 

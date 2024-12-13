@@ -76,14 +76,14 @@ Table *Table_createFromCSV(char *namePath, char *folderPath) {
     Table_writeHeader(table);
 
     // Lecture des entrées 
-    Entry* entry = Entry_create(table);
+    Entry* entry = Entry_create(table); 
 
     // Creation du fichier .dat
     snprintf(fileName, 256, "%s/%s.dat", folderPath, namePath);
     table->dataFile = fopen(fileName, "w");
 
     assert(table->dataFile);
-    Entry_create(table);
+    //Entry_create(table);
 
     FSeek(table->dataFile, 0, SEEK_END);
 
@@ -106,21 +106,22 @@ Table *Table_createFromCSV(char *namePath, char *folderPath) {
 
     for (int i = 0; i < table->attributeCount; i++) {
         if (isIndex[i] == 1) {
-            printf("Creation du fichier d'index %d : \n", i);
+            //printf("Creation du fichier d'index %d : \n", i);
             Index* index = Index_create(table, i, folderPath);
-			printf("Index : %lld\n", index);
+			//printf("Index : %lld\n", index);
+            free(index); 
         }
     }
-
+    //Entry_destroy(entry); 
     fclose(csvFile);
     return table;
 }
 
 void Entry_read(Table* table, Entry* entry, FILE* csvFile) {
-    scanfRead = fscanf(csvFile, "\n");
+    scanfRead = fscanf(csvFile, "\n");  
     for (int i = 0; i < table->attributeCount; i++) 
     {
-        memset(entry->values[i], 0, table->attributes[i].size);
+        memset(entry->values[i], 0, table->attributes[i].size + 1); //+1 pour le dernier char
         scanfRead = fscanf(csvFile, "%[^;];", entry->values[i]);
     }
 }
@@ -286,7 +287,7 @@ void Table_writeEntry(Table *table, Entry *entry, EntryPointer entryPointer)
     fwrite(&(entry->nextFreePtr), sizeof(EntryPointer), 1, table->dataFile);
     for (int i = 0; i < table->attributeCount; i++) {
         Attribute* attribute = table->attributes + i;
-        fwrite(entry->values[i], attribute->size, 1, table->dataFile);
+        fwrite(entry->values[i], attribute->size, sizeof(char), table->dataFile);
     }
 }
 
@@ -392,21 +393,25 @@ Entry *Entry_create(Table *table)
     entry->nextFreePtr = INVALID_POINTER;
 
     assert(entry->values);
-    for (int i = 0; i < table->attributeCount; i++) {
-        entry->values[i] = (char*)calloc(1, sizeof(table->attributes[i].size));
+    for (int i = 0; i < table->attributeCount; i++)
+    {
+        entry->values[i] = (char*)calloc(table->attributes[i].size + 1, sizeof(char)); // +1 pour le caractère nul
     }
     return entry;
 }
 
-void Entry_destroy(Entry *self) {  
-   assert(self);  
-   for (int i = 0; i < self->attributeCount; i++) {  
-       free(self->values[i]);  
-   }  
-   free(self->values);   
-   free(self);   
-}
 
+void Entry_destroy(Entry *self) 
+{    
+    assert(self);
+    for (int i = 0; i < self->attributeCount; i++) 
+    { 
+        //if (self->values[i][0] != '\0')
+            free(self->values[i]);
+    }
+    free(self->values);   
+    free(self);   
+}
 
 void Entry_print(Entry *self) {
 	assert(self);
