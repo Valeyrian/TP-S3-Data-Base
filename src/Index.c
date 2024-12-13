@@ -158,7 +158,8 @@ Index* Index_create(Table* table, int attributeIndex, char* folderPath)
 		Index_insertEntry(index, entry->values[attributeIndex], offset);
 
 	}
-	Entry_destroy(entry);
+
+	// Entry_destroy(entry);
 
 	printf("\n\nPrint de l'arbre (prefixe) : \n");
 	Index_printRec(index, index->rootPtr);
@@ -250,7 +251,7 @@ bool Index_find(Index* self, char* key, NodePointer* parentPtr) {
 	}
 }
 
-void Index_insertEntry(Index* self, char* key, EntryPointer entryPtr) {
+void Index_insertEntry2(Index* self, char* key, EntryPointer entryPtr) {
 
 	// Creer le node qui va servir a stocker ce qu'on va read
 	IndexNode parentNode;
@@ -290,6 +291,46 @@ void Index_insertEntry(Index* self, char* key, EntryPointer entryPtr) {
 	Index_balance(self, newNodePtr);
 	return;
 }
+
+void Index_insertEntry(Index* self, char* key, EntryPointer entryPtr)
+{
+	NodePointer nodePtr = Index_createNode(self, key, entryPtr);
+
+	if (self->rootPtr == INVALID_POINTER)
+	{
+		self->rootPtr = nodePtr;
+		return;
+	}
+
+	// Recherche le parent parmi les feuilles
+	NodePointer parentPtr = self->rootPtr;
+	IndexNode parent;
+	while (true)
+	{
+		Index_readNode(self, &parent, parentPtr);
+		NodePointer childPtr =
+			strcmp(key, parent.key) <= 0 ?
+			parent.leftPtr : parent.rightPtr;
+
+		if (childPtr == INVALID_POINTER) break;
+
+		parentPtr = childPtr;
+	}
+
+	// Ajoute le nouveau noeud
+	if (strcmp(key, parent.key) <= 0)
+	{
+		Index_setLeftNode(self, parentPtr, nodePtr);
+	}
+	else
+	{
+		Index_setRightNode(self, parentPtr, nodePtr);
+	}
+
+	// Rééquilibre l'arbre
+	Index_balance(self, nodePtr);
+}
+
 
 int64_t Index_getNodeHeight(Index* self, NodePointer nodePtr)
 {
