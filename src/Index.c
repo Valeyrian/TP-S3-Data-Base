@@ -162,7 +162,7 @@ Index* Index_create(Table* table, int attributeIndex, char* folderPath)
 		//Entry_destroy(entry);
 	}
 	printf("\n\nPrint de l'arbre (prefixe) : \n");
-	// Index_printRec(index, 0);
+	Index_printRec(index, index->rootPtr);
 	return index;
 }
 
