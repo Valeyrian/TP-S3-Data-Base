@@ -9,6 +9,7 @@
 #include "Settings.h"
 #include "SetEntry.h"
 
+
 ///@brief Taille maximale pour le nom d'un attribut ou d'une table.
 #define MAX_NAME_SIZE 64
 #define PTR 8
@@ -225,3 +226,4 @@ void Entry_print(Entry *self);
 int* Header_read(Table* table, FILE* csvFile);
 
 void Entry_read(Table* table, Entry* entry, FILE* csvFile);
+

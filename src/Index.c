@@ -152,12 +152,14 @@ Index* Index_create(Table* table, int attributeIndex, char* folderPath)
 		Table_readEntry(table, entry, offset);
 		Index_insertEntry(index, entry->values[attributeIndex], offset);
 	}
+	
 	return index;
 }
 
 void Index_destroy(Index* self)
 {
-	fclose(self->indexFile);
+	fclose(self->indexFile);		
+	Table_destroy(self->table); // Libérer la mémoire de la table  
 	free(self);
 }
 
@@ -204,7 +206,6 @@ void Index_insertEntry(Index* self, char* key, EntryPointer entryPtr)
 		NodePointer childPtr = strcmp(key, parent.key) <= 0 ? parent.leftPtr : parent.rightPtr;
 
 		if (childPtr == INVALID_POINTER) break;
-
 		parentPtr = childPtr;
 	}
 

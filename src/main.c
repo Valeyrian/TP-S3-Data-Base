@@ -7,10 +7,54 @@
 #include "Settings.h"
 #include "Table.h"
 #include "Index.h"
+#include "Ui.h" 
+#include "Menus.h"
 
-#if 0
+#if 1
 int main(int argc, char** argv)
 {
+	Table* table = Table_load("C:/Users/valey/Documents/Test_tp/psittamulgiformes.tbl", "C:/Users/valey/Documents/Test_tp/psittamulgiformes.dat");
+	mergeFromCSV(table);
+	//insertInDatabase(table);
+}
+#endif
+
+
+#if 0
+int main() { 
+    int res = 0;
+    int choice = 0;
+
+    // Boucle principale
+    while (1) {
+        choice = selectAction();
+        switch (choice) {
+        case CREATE_FROM_CSV:
+            res = createFromCSV();
+            if (res == 1) {
+                continue;  // Recommence la boucle
+            }
+			else goto end;
+            break;
+        case OPEN_EXISTING:
+			res = loadDatabase();
+			if (res == 1) {
+				continue;  // Recommence la boucle
+			}
+			else goto end;
+            break;
+        case CREATE_MANUALLY:
+            printf("CREATE_MANUALLY\n");
+            break;
+        case QUIT:
+            printf("QUIT\n");
+			goto end;
+        default:
+            printf("Invalid choice\n");
+            break;
+        }
+    }
+    end :
     return EXIT_SUCCESS;
 }
 #endif
@@ -25,6 +69,8 @@ int main(int argc, char** argv)
     char *namePath = "psittamulgiformes";
 
 	Table* table = Table_createFromCSV(namePath, folderPath);
+    free(table);
+    
 	// Table_debugPrint(table); 
     
     //Table* table = Table_load(namePath, folderPath); 
@@ -67,12 +113,13 @@ int main(int argc, char** argv)
     SetEntryIter *it = SetEntryIter_create(result);
     Entry *entry = Entry_create(table);
     printf("Result count = %d\n", SetEntry_size(result));
+    
     while (SetEntryIter_isValid(it))
     {
         EntryPointer entryPtr = SetEntryIter_getValue(it);
         
         Table_readEntry(table, entry, entryPtr);
-        printf("----\n");
+        printf("----\n"); 
         Entry_print(entry);
         SetEntryIter_next(it);
     }

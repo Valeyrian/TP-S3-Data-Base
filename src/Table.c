@@ -56,6 +56,7 @@ int Filter_test(Filter *self, char *nodeKey)
     return res;
 }
 
+
 Table *Table_createFromCSV(char *namePath, char *folderPath) {
 
     // Creer la table
@@ -65,7 +66,7 @@ Table *Table_createFromCSV(char *namePath, char *folderPath) {
     // Ouvre le fichier csv
     char fileName[256];
 	snprintf(fileName, 256, "%s/%s.csv", folderPath, namePath);
-    FILE* csvFile = fopen(fileName, "r");
+    FILE* csvFile = fopen(namePath, "r+b"); // j'ai modif ici
     assert(csvFile);
 
     // Lecture du header
@@ -75,14 +76,14 @@ Table *Table_createFromCSV(char *namePath, char *folderPath) {
     strcpy(table->folderPath, folderPath);
 
     // Lecture des entrées 
-    Entry* entry = Entry_create(table);
+    Entry* entry = Entry_create(table); 
 
     // Creation du fichier .dat
     snprintf(fileName, 256, "%s/%s.dat", folderPath, namePath);
     table->dataFile = fopen(fileName, "wb+");
 
     assert(table->dataFile);
-    Entry_create(table);
+    //Entry_create(table);
 
     FSeek(table->dataFile, 0, SEEK_END);
 
@@ -201,20 +202,42 @@ void Table_writeHeader(Table* self) {
     fclose(tblFile);
 }
 
-Table *Table_load(char *namePath, char *folderPath) {   
-    
+Table* Table_load(char* namePath, char* folderPath) {   //j'ai modif les fileOpen name path pour le tbl et folder path pour le dat
     // Ouverture du fichier de données en lecture
     char tblName[256];
-    snprintf(tblName, 256, "%s/correction/%s.tbl", folderPath, namePath);
-    FILE* tblFile = fopen(tblName, "rb");
+    snprintf(tblName, 256, "%s/%s.tbl", folderPath, namePath);
+    
+	//FILE* tblFile = fopen(tblName, "r"); J'ai modif ici
+	FILE* tblFile = fopen(namePath, "rb");
     assert(tblFile); 
+
+    
 
     // Allocation de la table  
     Table* table = calloc(1, sizeof(Table)); 
     assert(table);
 
-	// Ajout du folderPath
-	strcpy(table->folderPath, folderPath);
+    //ajout du dataFile
+
+    table->dataFile = fopen(folderPath, "r+b"); 
+
+
+    // Ajout du folderPath
+    char* localPath = (char*)calloc(1024, sizeof(char)); 
+    const char* lastSlash = strrchr(namePath, '/'); // Windows (séparateur `\\`)
+
+    if (lastSlash) {
+
+        size_t length = lastSlash - namePath; // Longueur du chemin du répertoire parent
+        strncpy(localPath, namePath, length);
+        localPath[length] = '\0';
+    }
+    else
+    {
+        strcpy(localPath, ".");// Si aucun séparateur trouvé, c'est un fichier dans le répertoire courant
+    }
+    strcpy(table->folderPath, localPath);
+    free(localPath); 
 
     // Lecture du nom de la table
     fread(&table->name, sizeof(table->name), sizeof(char), tblFile); 
@@ -267,7 +290,7 @@ Table *Table_load(char *namePath, char *folderPath) {
     // Ouverture du fichier .dat
     char datFile[256];
     snprintf(datFile, 256, "%s/%s.dat", folderPath, table->name);
-    table->dataFile = fopen(datFile, "rb+");
+    table->dataFile = fopen(folderPath, "rb+");
 
 	fclose(tblFile);
     //Table_debugPrint(table);
@@ -283,7 +306,7 @@ void Table_writeEntry(Table *table, Entry *entry, EntryPointer entryPointer)
     fwrite(&(entry->nextFreePtr), sizeof(EntryPointer), 1, table->dataFile);
     for (int i = 0; i < table->attributeCount; i++) {
         Attribute* attribute = table->attributes + i;
-        fwrite(entry->values[i], attribute->size, 1, table->dataFile);
+        fwrite(entry->values[i], attribute->size, sizeof(char), table->dataFile);
     }
 }
 
@@ -396,22 +419,24 @@ Entry *Entry_create(Table *table)
     entry->nextFreePtr = INVALID_POINTER;
 
     assert(entry->values);
-    for (int i = 0; i < table->attributeCount; i++) {
-        entry->values[i] = (char*)calloc(1, sizeof(table->attributes[i].size));
+    for (int i = 0; i < table->attributeCount; i++)
+    {
+        entry->values[i] = (char*)calloc(table->attributes[i].size + 1, sizeof(char)); // +1 pour le caractère nul
     }
     return entry;
 }
 
-void Entry_destroy(Entry *self) {
-	if (self == NULL) return;
-    for (int i = 0; i < self->attributeCount; i++) {  
-        printf("self->values[i] : %s\n", self->values[i]);
-        free(self->values[i]);  
-    }  
+void Entry_destroy(Entry *self) 
+{    
+    assert(self);
+    for (int i = 0; i < self->attributeCount; i++) 
+    { 
+        //if (self->values[i][0] != '\0')
+            free(self->values[i]);
+    }
     free(self->values);   
     free(self);   
 }
-
 
 void Entry_print(Entry *self) {
 	assert(self);
