@@ -10,18 +10,18 @@
 #include "Ui.h" 
 #include "Menus.h"
 
-#if 0
+#if 1
 int main(int argc, char** argv)
 {
 	Table* table = Table_load("C:/Users/valey/Documents/Test_tp/psittamulgiformes.tbl", "C:/Users/valey/Documents/Test_tp/psittamulgiformes.dat");
-	actionOnDatabase(table);
+	mergeFromCSV(table);
 	//insertInDatabase(table);
 }
 #endif
 
 
-#if 1
-int main() {
+#if 0
+int main() { 
     int res = 0;
     int choice = 0;
 

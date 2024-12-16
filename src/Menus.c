@@ -76,6 +76,22 @@ bool checkEntryFromUser(Entry* entry, Table* table)
 	return true;
 }	
 
+bool chekTableCompatible(Table* table, Table* table2)
+{
+	if (table->attributeCount != table2->attributeCount) 
+	{
+		return false;
+	}
+	for (int i = 0; i < table->attributeCount; i++)
+	{
+		if (strcmp(table->attributes[i].name, table2->attributes[i].name) != 0)
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
 void getFileNameWithoutExtension(const char* filePath, char* fileName)
 {
 	// Trouver la dernière occurrence du séparateur de chemin
@@ -100,10 +116,26 @@ void getFileNameWithoutExtension(const char* filePath, char* fileName)
 	}
 }
 
+void getParentDirectory(const char* filePath, char* parentDir)
+{
+	const char* lastSlash = strrchr(filePath, '\\'); // Windows (séparateur `\\`)
+
+	if (lastSlash) {
+
+		size_t length = lastSlash - filePath; // Longueur du chemin du répertoire parent
+		strncpy(parentDir, filePath, length);
+		parentDir[length] = '\0';
+	}
+	else {
+		strcpy(parentDir, ".");// Si aucun séparateur trouvé, c'est un fichier dans le répertoire courant
+	}
+}
+
 void pauseForUser()
 {
 	printf("Appuyez sur Entrée pour continuer"BLINK_SLOW"...\n"RESET);
 	while (getchar() != '\n'); // Nettoyer le buffer résiduel
+	clearInputBuffer();
 }
 
 void clearInputBuffer() {
@@ -839,40 +871,12 @@ int mergeFromCSV(Table *table)
 		return -1;
 	}
 
-	DataBaseLoad* dbLoad = calloc(1, sizeof(DataBaseLoad));
-	if (!dbLoad) {
-		fprintf(stderr, "Erreur d'allocation mémoire.\n");
-		return -1;
-	}
-
-	dbLoad->tblFile = calloc(1024, 1);
-	dbLoad->datFile = calloc(1024, 1);
-	dbLoad->idxFolder = calloc(1024, 1);
-
-	if (!dbLoad->tblFile || !dbLoad->datFile || !dbLoad->idxFolder) {
-		fprintf(stderr, "Erreur d'allocation mémoire pour les chemins.\n");
-		free(dbLoad->tblFile);
-		free(dbLoad->datFile);
-		free(dbLoad->idxFolder);
-		free(dbLoad);
-		return -1;
-	}
-
-	dbLoad->tblFile[0] = '\0';
-	dbLoad->datFile[0] = '\0';
-	dbLoad->idxFolder[0] = '\0';
-	dbLoad->validTblFile = false;
-	dbLoad->validDatFile = false;
-	dbLoad->validIdxFolder = false;
-
-
-	fromCsv->validFolder = true;
-	fromCsv->valideFile = true;
+	fromCsv->folderPath = table->folderPath; 
 
 	int UserEntry = 0;
 
 	while (isEndending) {
-		createFromCSVPrint(fromCsv);
+		MergeFromCSVPrint(fromCsv);
 		UserEntry = 0;
 
 		printf("Entrez votre choix (1-5) : ");
@@ -889,43 +893,47 @@ int mergeFromCSV(Table *table)
 			break;
 
 		case 2:
-			printf("Entrez le chemin du dossier ou se situe le Csv: ");
-			scanf("%s", fromCsv->folderPath);
-			clearInputBuffer();
-			fromCsv->validFolder = checkFolder(fromCsv->folderPath);
-			break;
-
-		case 3:
 			fromCsv->valideFile = checkFile(fromCsv->CSVpath);
 			fromCsv->validFolder = checkFolder(fromCsv->folderPath);
-			if (fromCsv->valideFile && fromCsv->validFolder) {
+			if (fromCsv->valideFile && fromCsv->validFolder) 
+			{
+
 				Table* tableFromCsv = Table_createFromCSV(fromCsv->CSVpath, fromCsv->folderPath);
+
 				if (tableFromCsv) {
 					Table_debugPrint(tableFromCsv);
 					printf(FG_GREEN "Table créée avec succès.\n" RESET);
 					
-					Entry* oneEntry = Entry_create(table);
+					int back = mergeTwoDataBase(table, tableFromCsv);
 
-					for (int i = 0; i < tableFromCsv->entryCount; i++) //on parcours les entrees de la table source
+					if (back == 1) 
 					{
-						for (int j = 0; j < tableFromCsv->attributeCount; j++) //pour chque entres on recupere les attributs
-						{
-							memset(oneEntry->values[j], 0, tableFromCsv->attributes[j].size + 1);
-							fread(oneEntry->values[j], 1, tableFromCsv->attributes[j].size, tableFromCsv->dataFile);
-						}
-						Table_insertEntry(table, oneEntry);  //on insert l'entree dans la table
+						printf(FG_GREEN "Fusion de la table avec succès.\n" RESET); 
+						UserEntry = 4; 
 					}
-					//Entr_destroy(oneEntry);
-					//Table_destroy(tableFromCsv);
-					remove(dbLoad->tblFile);
-					remove(dbLoad->datFile);
+					else
+					{
+						printf(FG_RED"Erreur lors de la fusion du Csv avec la Table\n"FG_WHITE);
+					}
+					
 					printf(FG_GREEN "CSV fusionnée avec succès.\n" RESET);
-					UserEntry = 4;
+
+					char filePath[1024] = { '\0' }; //on nettoie les traces de notre passage
+					snprintf(filePath, 1024, "%s/%s.tbl", fromCsv->folderPath, tableFromCsv->name);
+					remove(filePath);
+					memset(filePath, 0, 1024);
+					snprintf(filePath, 1024, "%s/%s.dat", fromCsv->folderPath, tableFromCsv->name);
+					remove(filePath);
+					tableFromCsv->dataFile = NULL;
+
+					//Table_destroy(tableFromCsv);
+					goto end; 
 
 				}
 				else {
 					printf(FG_RED "Erreur lors de la création de la table.\n" RESET);
 					pauseForUser();
+					goto end;
 				}
 				isEndending = false;
 			}
@@ -939,13 +947,12 @@ int mergeFromCSV(Table *table)
 				pauseForUser();
 			}
 			break;
-
-		case 4:
-			isEndending = false;
-			goto end;
+		
+		case 3:
+			isEndending = false; 
+			goto end; 
 			break;
-
-		case 5:
+		case 4:
 			isEndending = false;
 			goto end;
 			break;
@@ -955,19 +962,39 @@ int mergeFromCSV(Table *table)
 			pauseForUser();
 			break;
 		}
+	}	
+end:	
 
-	}
-
-	
-			
-end:
-	free(dbLoad->tblFile);	
-	free(dbLoad->datFile);	
-	free(dbLoad->idxFolder);	
-	free(dbLoad);	
-
-	free(fromCsv->CSVpath);
+	/*free(fromCsv->CSVpath);
 	free(fromCsv->folderPath);
 	free(fromCsv);
+	*/
+
 	return UserEntry == 4 ? 1 : 0;
+}
+
+
+int mergeTwoDataBase(Table* dest, Table* source)
+{
+	
+	if (chekTableCompatible(dest, source) == false)
+	{
+		printf(FG_RED "Les tables ne sont pas compatibles.\n" RESET);
+		pauseForUser(); 
+		return 0 ;
+	}
+
+	Entry* oneEntry = Entry_create(source);
+	for (int i = 0; i < source->entryCount; i++) //on parcours les entrees de la table source 
+	{
+
+		for (int j = 0; j < source->attributeCount; j++) //pour chque entres on recupere les attributs 
+		{
+			memset(oneEntry->values[j], 0, source->attributes[j].size); //+1 pour le dernier char
+		}
+		Table_readEntry(source, oneEntry, i*source->entrySize);  //on insert l'entree dans la table
+		printf("val 0: %s \n", oneEntry->values[0]);
+		Table_insertEntry(dest, oneEntry);  //on insert l'entree dans la table
+	}
+	return 1;
 }

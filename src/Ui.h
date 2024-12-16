@@ -98,3 +98,5 @@ void searchInDatabasePrint(Table* table, Filter * filter, SearchInfo *info);
 
 //menu pour l'insertion dans une BDD
 void insertInDatabasePrint(Table* table);
+
+void MergeFromCSVPrint(FromCsv* fromCsv);
