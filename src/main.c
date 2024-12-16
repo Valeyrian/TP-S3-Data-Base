@@ -64,7 +64,7 @@ int main() {
 // Création d'une table à partir d'un CSV.
 int main(int argc, char** argv)
 {
-    char *correctionPath = "../data/intro/";
+    char *correctionPath = "../data/intro/correction";
     char* folderPath = "../data/intro";
     char *namePath = "psittamulgiformes";
 
@@ -72,7 +72,7 @@ int main(int argc, char** argv)
     free(table);
     
 	// Table_debugPrint(table); 
-	
+    
     //Table* table = Table_load(namePath, folderPath); 
 	//Table_debugPrint(table); 
   
@@ -81,15 +81,12 @@ int main(int argc, char** argv)
 	//Table* table = Table_createFromCSV(namePath, folderPath);
 	//Table_debugPrint(table);
 	
-
-
     // Table_destroy(table); table = NULL;
-
-   // return EXIT_SUCCESS;
+    // return EXIT_SUCCESS;
 }
 #endif
 
-#if 0
+#if 1
 // Exemple de main() :
 // Recherche dans une table sur un attribut indexé
 int main(int argc, char** argv)
@@ -103,8 +100,8 @@ int main(int argc, char** argv)
 
     // Création du filtre de la recherche
     Filter filter = { 0 };
-    filter.attributeIndex = 1;
-    filter.key1 = "Ibijau";
+    filter.attributeIndex = 0;
+    filter.key1 = "Po";
     //filter.key2 = "40";
     filter.requestOp = OP_EQ;
 

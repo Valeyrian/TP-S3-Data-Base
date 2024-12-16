@@ -165,3 +165,6 @@ NodePointer Index_searchEntry(Index *self, char *key, EntryPointer entryPtr);
 /// @param depth la profondeur du noeud.
 /// @param nodePtr pointeur vers la racine du sous-arbre à afficher.
 void Index_debugPrint(Index *self, int depth, NodePointer nodePtr);
+
+
+void Index_printRec(Index* self, NodePointer nodePtr);
