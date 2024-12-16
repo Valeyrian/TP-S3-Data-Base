@@ -405,3 +405,27 @@ void insertInDatabasePrint(Table* table)
 
 
 }
+
+void MergeFromCSVPrint(FromCsv* fromCsv)
+{
+    printf(RESET BG_BLACK FG_WHITE);
+    for (int i = 0; i < 100; i++)
+    {
+        printf("\n");
+    }
+    printf("\n");
+    printf("        "BOLD FG_WHITE UNDERLINE"Ajouter des donnes depuis un CSV\n\n" RESET);//
+
+  
+    printf(FG_WHITE ITALIC"");
+    printf("\n\n");
+
+    printf("    "BOLD UNDERLINE FG_WHITE"Options :"RESET"\n\n ");
+
+    printf("   1. Modifier le chemin du fichier CSV : ");
+    printf(FG_YELLOW ITALIC"%s\n" RESET, fromCsv->CSVpath);
+
+    printf("    2. Valier et continuer\n");
+    printf("    3. Retour\n");
+    printf("    4. Quiter\n\n");
+}

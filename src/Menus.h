@@ -61,9 +61,14 @@ bool checkFilter(Filter* filter, Table* table);
 //verrifie une entrée
 bool checkEntryFromUser(Entry* entry, Table* table);
 
+//verifie que la table source est compatible avec la table de destination
+bool chekTableCompatible(Table *dest, Table* source);
+
 //trouve le nom d'un fichier
 void getFileNameWithoutExtension(const char* filePath, char* fileName);
 
+//trouve le dossier parent d'un fichier
+void getParentDirectory(const char* filePath, char* parentDir);
 
 //fait une pause dans le programme et attend que l'utilisateur appuie sur une touche
 void pauseForUser();
@@ -94,6 +99,9 @@ void insertMultipleEntryFromUser(Table* table);
 
 //menu pour merge depuis un csv
 int mergeFromCSV(Table *table);
+
+//menu pour merge depuis une autre BDD
+int mergeTwoDataBase(Table* dest, Table* source);
 
 
 #endif // !MENUS_H
