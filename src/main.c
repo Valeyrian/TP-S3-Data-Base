@@ -15,7 +15,7 @@ int main(int argc, char** argv)
 }
 #endif
 
-#if 1
+#if 0
 // Exemple de main() :
 // Création d'une table à partir d'un CSV.
 int main(int argc, char** argv)
@@ -24,7 +24,6 @@ int main(int argc, char** argv)
     char* folderPath = "../data/intro";
     char *namePath = "psittamulgiformes";
 
-    // printf("%d", strcmp("Chu", "Bigette"));
 	Table* table = Table_createFromCSV(namePath, folderPath);
 	// Table_debugPrint(table); 
     
@@ -41,7 +40,7 @@ int main(int argc, char** argv)
 }
 #endif
 
-#if 0
+#if 1
 // Exemple de main() :
 // Recherche dans une table sur un attribut indexé
 int main(int argc, char** argv)
@@ -51,7 +50,6 @@ int main(int argc, char** argv)
 
     // Ouverture de la table
     Table *table = Table_load(namePath, folderPath);
-    // Index* index = Index_load(table, 0, folderPath, table->attributes[0].index, INVALID_POINTER);
     // Table_debugPrint(table);
 
     // Création du filtre de la recherche
@@ -63,8 +61,7 @@ int main(int argc, char** argv)
 
     // Recherche
     SetEntry *result = SetEntry_create();
-    // Table_search(table, &filter, result);
-    Index_searchRec(index, 0, &filter, result);
+    Table_search(table, &filter, result);
 
     // Affichage du résultat
     SetEntryIter *it = SetEntryIter_create(result);

@@ -65,7 +65,6 @@ NodePointer Index_createNode(Index* self, char* key, EntryPointer entryPtr)
 	else {
 		FSeek(self->indexFile, 0, SEEK_END);
 		nodePtr = FTell(self->indexFile);
-		printf("	- Offset (dans le.idx) : % llu\n", nodePtr);
 	}
 
 	Index_writeNode(self, &node, nodePtr);
@@ -151,14 +150,8 @@ Index* Index_create(Table* table, int attributeIndex, char* folderPath)
 	for (int i = 0; i < table->entryCount; i++) {
 		EntryPointer offset = i * table->entrySize;
 		Table_readEntry(table, entry, offset);
-
-		printf("\n\nEntry : %d / %s | Offset (de lecture du .dat) : %lld\n", i, entry->values[attributeIndex], offset);
 		Index_insertEntry(index, entry->values[attributeIndex], offset);
 	}
-
-	printf("\n\nPrint de l'arbre (prefixe) : \n");
-	Index_printRec(index, index->rootPtr);
-	printf("\n\n");
 	return index;
 }
 
@@ -185,21 +178,11 @@ Index* Index_load(Table* table, int attributeIndex, char* folderPath, NodePointe
 	index->rootPtr = rootPtr;
 	index->nextFreePtr = nextFreePtr;
 
-	//IndexNode root;
-	//Index_readNode(index, &root, index->rootPtr);
-
-	//fread(&root.leftPtr, PTR, 1, indexFile);
-	//fread(&root.rightPtr, PTR, 1, indexFile);
-	//fread(&root.height, PTR, 1, indexFile);
-	//fread(&root.entryPtr, PTR, 1, indexFile);
-	//fread(&root.key, sizeof(table->attributes[attributeIndex]), 1, indexFile);
-	//root.entryPtr = INVALID_POINTER;
-
-	printf("Index %d loaded\n", attributeIndex);
-	printf("RootPtr: %lld\n", index->rootPtr);
-	printf("NextFreePtr: %lld\n", index->nextFreePtr);
-	printf("AttributeSize: %lld\n", index->attributeSize);
-	printf("AttributeIndex: %d\n", index->attributeIndex);
+	printf("\nIndex %d loaded\n", attributeIndex);
+	printf("	- RootPtr: %lld\n", index->rootPtr != INVALID_POINTER ? index->rootPtr : -1);
+	printf("	- NextFreePtr: %lld\n", index->nextFreePtr != INVALID_POINTER ? index->nextFreePtr : -1);
+	printf("	- AttributeSize: %lld\n", index->attributeSize);
+	printf("	- AttributeIndex: %d\n", index->attributeIndex);
 
 	return index;
 }
@@ -285,7 +268,6 @@ void Index_setLeftNode(Index* self, NodePointer parentPtr, NodePointer childPtr)
 		IndexNode child;
 		Index_readNode(self, &child, childPtr);
 		child.parentPtr = parentPtr;
-		printf("	- Parent : %s | Left Child : %s | ChildPtr : %lld\n", parent.key, child.key, childPtr);
 		Index_writeNode(self, &child, childPtr);
 	}
 }
@@ -302,7 +284,6 @@ void Index_setRightNode(Index* self, NodePointer parentPtr, NodePointer childPtr
 		IndexNode child;
 		Index_readNode(self, &child, childPtr);
 		child.parentPtr = parentPtr;
-		printf("	- Parent : %s | Right Child : %s | ChildPtr : %lld\n", parent.key, child.key, childPtr);
 		Index_writeNode(self, &child, childPtr);
 	}
 }
@@ -462,51 +443,25 @@ void Index_removeEntry(Index* self, char* key, EntryPointer entryPtr) {
 	printf("Clé non trouvée dans l'index.\n");
 }
 
-void Index_searchRec(Index* self, NodePointer nodePtr, Filter* filter, SetEntry* resultSet)
-{
-	if (nodePtr == INVALID_POINTER) return;
+void Index_searchRec(Index* self, NodePointer currentNodePtr, Filter* filter, SetEntry* resultSet) {
 
-	IndexNode node;
-	Index_readNode(self, &node, nodePtr);
+	IndexNode currentNode;
+	Index_readNode(self, &currentNode, currentNodePtr);
+	
+	switch (Filter_test(filter, currentNode.key)) {
+	case FILTER_FOUND:
+		SetEntry_insert(resultSet, currentNode.entryPtr);
+		break;
 
-	switch (filter->requestOp) {
-	case OP_EQ:
-		if (strcmp(node.key, filter->key1) == 0)
-		{
-			SetEntry_insert(resultSet, node.entryPtr);
+	case FILTER_SEARCH_RIGHT:
+		if (currentNode.rightPtr != INVALID_POINTER) {
+			Index_searchRec(self, currentNode.rightPtr, filter, resultSet);
 		}
 		break;
-	case OP_LT:
-		if (strcmp(node.key, filter->key1) < 0)
-		{
-			SetEntry_insert(resultSet, node.entryPtr);
-			Index_searchRec(self, node.leftPtr, filter, resultSet);
-		}
-		break;
-	case OP_LEQ:
-		if (strcmp(node.key, filter->key1) <= 0)
-		{
-			SetEntry_insert(resultSet, node.entryPtr);
-			Index_searchRec(self, node.leftPtr, filter, resultSet);
-		}
-		break;
-	case OP_GT:
-		if (strcmp(node.key, filter->key1) > 0) {
-			SetEntry_insert(resultSet, node.entryPtr);
-			Index_searchRec(self, node.rightPtr, filter, resultSet);
-		}
-		break;
-	case OP_GEQ:
-		if (strcmp(node.key, filter->key1) >= 0)
-		{
-			SetEntry_insert(resultSet, node.entryPtr);
-			Index_searchRec(self, node.rightPtr, filter, resultSet);
-		}
-		break;
-	case OP_BETW:
-		if (strcmp(node.key, filter->key1) >= 0 && strcmp(node.key, filter->key2) <= 0)
-		{
-			SetEntry_insert(resultSet, node.entryPtr);
+
+	case FILTER_SEARCH_LEFT:
+		if (currentNode.leftPtr != INVALID_POINTER) {
+			Index_searchRec(self, currentNode.leftPtr, filter, resultSet);
 		}
 		break;
 	}

@@ -16,11 +16,11 @@ int Filter_test(Filter *self, char *nodeKey)
 
     int res = 0;
     switch (self->requestOp) {
-    case OP_EQ: // Egale
-        if (cmp1 == 0) res |= FILTER_FOUND;
-        if (cmp1 < 0) res |= FILTER_SEARCH_RIGHT;
-        if (cmp1 > 0) res |= FILTER_SEARCH_LEFT;
-        break;
+        case OP_EQ: // Egale
+            if (cmp1 == 0) res |= FILTER_FOUND;
+            if (cmp1 < 0) res |= FILTER_SEARCH_RIGHT;
+            if (cmp1 > 0) res |= FILTER_SEARCH_LEFT;
+            break;
 
     case OP_LT:
         if (cmp1 < 0) res |= FILTER_FOUND;
@@ -104,11 +104,8 @@ Table *Table_createFromCSV(char *namePath, char *folderPath) {
         table->entrySize += table->attributes[i].size;
     
     for (int i = 0; i < table->attributeCount; i++) {
-        if (isIndex[i] == 1) {
-            printf("\n---------------------------------------------------\n        Creation du fichier d'index %d : \n", i);
-            Index* index = Index_create(table, i, folderPath);
-	        table->attributes[i].index = index;
-        }
+        if (isIndex[i] == 1) 
+            table->attributes[i].index = Index_create(table, i, folderPath);
 		else 
 			table->attributes[i].index = INVALID_POINTER;
     }
@@ -121,8 +118,7 @@ Table *Table_createFromCSV(char *namePath, char *folderPath) {
 
 void Entry_read(Table* table, Entry* entry, FILE* csvFile) {
     scanfRead = fscanf(csvFile, "\n");
-    for (int i = 0; i < table->attributeCount; i++) 
-    {
+    for (int i = 0; i < table->attributeCount; i++) {
         memset(entry->values[i], 0, table->attributes[i].size);
         scanfRead = fscanf(csvFile, "%[^;];", entry->values[i]);
     }
@@ -153,7 +149,6 @@ int* Header_read(Table* table, FILE* csvFile) {
 
         // Lire si l'attribut est indéxé
         scanfRead = fscanf(csvFile, "%d;", &isIndex[i]);
-        // printf("(%s);%d;%d;\n", table->attributes[i].name, table->attributes[i].size, table->attributes[i].index);
     };
 
     // Lire le nombre d'entrées
@@ -185,8 +180,8 @@ void Table_writeHeader(Table* self) {
         fwrite(self->attributes[i].name, MAX_NAME_SIZE, 1, tblFile);
         fwrite(&self->attributes[i].size, PTR, 1, tblFile);
         
-        if (self->attributes[i].index) {
-			// Creation de l'index
+        if (self->attributes[i].index != INVALID_POINTER) {
+			// Link des infos de l'index dans le fichier .tbl
 			fwrite(&self->attributes[i].index->rootPtr, PTR, 1, tblFile);
 			fwrite(&self->attributes[i].index->nextFreePtr, PTR, 1, tblFile);
 		}
@@ -233,7 +228,9 @@ Table *Table_load(char *namePath, char *folderPath) {
 
     // Allocation d'un pointeur temporaire pour les index des attributs
     NodePointer* tmp = INVALID_POINTER; 
-
+    NodePointer* root = (NodePointer**) calloc(table->attributeCount, PTR);
+    NodePointer* nextFree = (NodePointer**) calloc(table->attributeCount, PTR);
+	assert(root && nextFree);
     for (int i = 0; i < table->attributeCount; i++) {
         
         // Lecture du nom de l'attribut 
@@ -243,25 +240,19 @@ Table *Table_load(char *namePath, char *folderPath) {
         fread(&table->attributes[i].size, PTR, sizeof(char), tblFile);
 		
 		// Lecture de l'offset de la root
-        NodePointer root = INVALID_POINTER;
-        fread(&root, PTR, sizeof(char), tblFile);
+        fread(&root[i], PTR, sizeof(char), tblFile);
         
 		// Lecture du nextFreePtr
-		NodePointer nextFree = INVALID_POINTER;
-		fread(&nextFree, PTR, sizeof(char), tblFile);
-      
-		Index* index = (Index*)calloc(1, sizeof(Index));
-		assert(index);
-		index->table = table;
-		printf("Index root offset : %llu\n", root == INVALID_POINTER ? -1 : root);
-        // Index_load(table, i, folderPath, table->attributes[i].index->rootPtr, INVALID_POINTER);
-
-		fread(&index->rootPtr, PTR, sizeof(char), tblFile);
-		fread(&index->nextFreePtr, PTR, sizeof(char), tblFile);
-        table->attributes[i].index = index; 
+		fread(&nextFree[i], PTR, sizeof(char), tblFile);
+        
+		if (root[i] != INVALID_POINTER) {
+			table->attributes[i].index = Index_load(table, i, folderPath, root[i], nextFree[i]);
+			
+		}
+		else 
+			table->attributes[i].index = INVALID_POINTER;
     }
     
-
     // Lecture du nombre d'entrées 
 	fread(&table->entryCount, PTR, sizeof(char), tblFile);
 
@@ -320,19 +311,26 @@ void Table_destroy(Table *self)
     return;
 }
 
-void Table_search(Table *self, Filter *filter, SetEntry *resultSet) {
+void Table_search(Table* self, Filter* filter, SetEntry* resultSet) {
 
     // Parcourir le fichier
     Entry* entry = Entry_create(self);
     EntryPointer ptr = 0;
 
-    for (int i = 0; i < self->entryCount; i++) {
-        ptr = i * self->entrySize;
-        Table_readEntry(self, entry, ptr);
-		char* value = entry->values[filter->attributeIndex];
-		
-        if (Filter_test(filter, value) & FILTER_FOUND) SetEntry_insert(resultSet, ptr);
+    if (self->attributes[filter->attributeIndex].index != INVALID_POINTER) {
+        Index* index = self->attributes[filter->attributeIndex].index;
+        Index_searchRec(index, self->attributes[filter->attributeIndex].index->rootPtr, filter, resultSet);
+        return;
     }
+	else {
+		for (int i = 0; i < self->entryCount; i++) {
+			ptr = i * self->entrySize;
+			Table_readEntry(self, entry, ptr);
+			char* value = entry->values[filter->attributeIndex];
+
+			if (Filter_test(filter, value) & FILTER_FOUND) SetEntry_insert(resultSet, ptr);
+		}
+	}
 }
 
 void Table_insertEntry(Table *self, Entry *entry) {
