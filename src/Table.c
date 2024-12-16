@@ -65,7 +65,7 @@ Table *Table_createFromCSV(char *namePath, char *folderPath) {
     // Ouvre le fichier csv
     char fileName[256];
 	snprintf(fileName, 256, "%s/%s.csv", folderPath, namePath);
-    FILE* csvFile = fopen(fileName, "r");
+    FILE* csvFile = fopen(namePath, "r"); // j'ai modif ici
     assert(csvFile);
 
     // Lecture du hexader
@@ -79,7 +79,7 @@ Table *Table_createFromCSV(char *namePath, char *folderPath) {
     Entry* entry = Entry_create(table); 
 
     // Creation du fichier .dat
-    snprintf(fileName, 256, "%s/%s.dat", folderPath, namePath);
+    snprintf(fileName, 256, "%s/%s.dat", folderPath, table->name);
     table->dataFile = fopen(fileName, "w");
 
     assert(table->dataFile);
@@ -104,14 +104,14 @@ Table *Table_createFromCSV(char *namePath, char *folderPath) {
     for (int i = 0; i < table->attributeCount; i++)
         table->entrySize += table->attributes[i].size;
 
-    for (int i = 0; i < table->attributeCount; i++) {
-        if (isIndex[i] == 1) {
-            //printf("Creation du fichier d'index %d : \n", i);
-            Index* index = Index_create(table, i, folderPath);
-			//printf("Index : %lld\n", index);
-            free(index); 
-        }
-    }
+   // for (int i = 0; i < table->attributeCount; i++) {
+   //     if (isIndex[i] == 1) {
+   //         //printf("Creation du fichier d'index %d : \n", i);
+   //         Index* index = Index_create(table, i, folderPath);
+			////printf("Index : %lld\n", index);
+   //         free(index); 
+   //     }
+   // }
     //Entry_destroy(entry); 
     fclose(csvFile);
     return table;
@@ -206,11 +206,14 @@ void Table_writeHeader(Table* self)
     fclose(tblFile);
 }
 
-Table *Table_load(char *namePath, char *folderPath) {   
+Table* Table_load(char* namePath, char* folderPath) {   //j'ai modif les fileOpen
     // Ouverture du fichier de données en lecture
     char tblName[256];
     snprintf(tblName, 256, "%s/%s.tbl", folderPath, namePath);
-    FILE* tblFile = fopen(tblName, "r");
+	
+    
+	//FILE* tblFile = fopen(tblName, "r"); J'ai modif ici
+	FILE* tblFile = fopen(namePath, "r");
     assert(tblFile); 
 
     // Allocation de la table  
@@ -249,7 +252,7 @@ Table *Table_load(char *namePath, char *folderPath) {
 
 		fread(&index->rootPtr, PTR, sizeof(char), tblFile);
 		fread(&index->nextFreePtr, PTR, sizeof(char), tblFile);
-		printf("Root: %llu\n", index->rootPtr);
+		//printf("Root: %llu\n", index->rootPtr);
         table->attributes[i].index = index; 
         
         // table->attributes[i].index = INVALID_POINTER;
@@ -271,7 +274,9 @@ Table *Table_load(char *namePath, char *folderPath) {
     // Ouverture du fichier .dat
     char datFile[256];
     snprintf(datFile, 256, "%s/%s.dat", folderPath, table->name);
-    table->dataFile = fopen(datFile, "r+b");
+    
+	//table->dataFile = fopen(datFile, "r+b"); j'ai modif ici
+    table->dataFile = fopen(folderPath, "r+b");
 
 	fclose(tblFile);
     //Table_debugPrint(table);
@@ -326,7 +331,8 @@ void Table_search(Table *self, Filter *filter, SetEntry *resultSet) {
         Table_readEntry(self, entry, ptr);
 		char* value = entry->values[filter->attributeIndex];
 		
-        if (Filter_test(filter, value) & FILTER_FOUND) SetEntry_insert(resultSet, ptr);
+        if (Filter_test(filter, value) & FILTER_FOUND)
+            SetEntry_insert(resultSet, ptr);
     }
 }
 
