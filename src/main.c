@@ -27,7 +27,7 @@ int main(int argc, char** argv)
     // printf("%d", strcmp("Chu", "Bigette"));
 	Table* table = Table_createFromCSV(namePath, folderPath);
 	// Table_debugPrint(table); 
-	
+    
     //Table* table = Table_load(namePath, folderPath); 
 	//Table_debugPrint(table); 
   
@@ -51,18 +51,20 @@ int main(int argc, char** argv)
 
     // Ouverture de la table
     Table *table = Table_load(namePath, folderPath);
+    // Index* index = Index_load(table, 0, folderPath, table->attributes[0].index, INVALID_POINTER);
     // Table_debugPrint(table);
 
     // Création du filtre de la recherche
     Filter filter = { 0 };
-    filter.attributeIndex = 1;
-    filter.key1 = "Ibijau";
+    filter.attributeIndex = 0;
+    filter.key1 = "Po";
     //filter.key2 = "40";
     filter.requestOp = OP_EQ;
 
     // Recherche
     SetEntry *result = SetEntry_create();
-    Table_search(table, &filter, result);
+    // Table_search(table, &filter, result);
+    Index_searchRec(index, 0, &filter, result);
 
     // Affichage du résultat
     SetEntryIter *it = SetEntryIter_create(result);

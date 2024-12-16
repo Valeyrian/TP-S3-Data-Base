@@ -68,7 +68,7 @@ Table *Table_createFromCSV(char *namePath, char *folderPath) {
     FILE* csvFile = fopen(fileName, "r");
     assert(csvFile);
 
-    // Lecture du hexader
+    // Lecture du header
     int* isIndex = Header_read(table, csvFile);
 
     // Creation de la table dans le .tbl
@@ -92,24 +92,28 @@ Table *Table_createFromCSV(char *namePath, char *folderPath) {
         // Lecture des entrées
         Entry_read(table, entry, csvFile);
 
-		//affichage des entrées
+		// Affichage des entrées
 		// Entry_print(entry);
 
         // Ecriture des entrées
         Table_writeEntry(table, entry, entryPointer);
     }
-
+    
     table->entrySize = 8;
     for (int i = 0; i < table->attributeCount; i++)
         table->entrySize += table->attributes[i].size;
-
+    
     for (int i = 0; i < table->attributeCount; i++) {
         if (isIndex[i] == 1) {
             printf("\n---------------------------------------------------\n        Creation du fichier d'index %d : \n", i);
             Index* index = Index_create(table, i, folderPath);
+	        table->attributes[i].index = index;
         }
+		else 
+			table->attributes[i].index = INVALID_POINTER;
     }
-
+	
+    // Entry_destroy(entry);
     fclose(csvFile);
     Table_writeHeader(table);
     return table;
@@ -163,8 +167,7 @@ void Table_writeData(Table* self)
 
 }
 
-void Table_writeHeader(Table* self)
-{
+void Table_writeHeader(Table* self) {
     // Ouverture du fichier 
     char fileName[648];
     snprintf(fileName, 648, "%s/%s.tbl", self->folderPath, self->name);
@@ -182,14 +185,13 @@ void Table_writeHeader(Table* self)
         fwrite(self->attributes[i].name, MAX_NAME_SIZE, 1, tblFile);
         fwrite(&self->attributes[i].size, PTR, 1, tblFile);
         
-		if (self->attributes[i].index) {
-			// creation de l'index
-			// Index* index = Index_create(self, i, self->folderPath);
-			fwrite("1", PTR, 1, tblFile);
-			fwrite("1", PTR, 1, tblFile);
+        if (self->attributes[i].index) {
+			// Creation de l'index
+			fwrite(&self->attributes[i].index->rootPtr, PTR, 1, tblFile);
+			fwrite(&self->attributes[i].index->nextFreePtr, PTR, 1, tblFile);
 		}
-        else 
-        {
+
+        else  {
             fwrite(&invalidPointer, PTR, 1, tblFile);
             fwrite(&invalidPointer, PTR, 1, tblFile);
         }
@@ -205,9 +207,10 @@ void Table_writeHeader(Table* self)
 }
 
 Table *Table_load(char *namePath, char *folderPath) {   
+    
     // Ouverture du fichier de données en lecture
     char tblName[256];
-    snprintf(tblName, 256, "%s/%s.tbl", folderPath, namePath);
+    snprintf(tblName, 256, "%s/correction/%s.tbl", folderPath, namePath);
     FILE* tblFile = fopen(tblName, "rb");
     assert(tblFile); 
 
@@ -233,25 +236,29 @@ Table *Table_load(char *namePath, char *folderPath) {
 
     for (int i = 0; i < table->attributeCount; i++) {
         
-        // Lecture du nom de l'attribut  
+        // Lecture du nom de l'attribut 
         fread(table->attributes[i].name, MAX_INDEX_ATTRIBUTE_SIZE, sizeof(char), tblFile); 
-        fread(&table->attributes[i].size, PTR, sizeof(char), tblFile); 
         
-        //fread(&table->attributes[i].index->rootPtr, PTR, sizeof(char), tblFile);
-        //fread(&tmp, PTR, sizeof(char), tblFile); 
-		//printf("root: %llu : \n", table->attributes[i].index->rootPtr);
+		// Lecture de la taille de l'attribut
+        fread(&table->attributes[i].size, PTR, sizeof(char), tblFile);
+		
+		// Lecture de l'offset de la root
+        NodePointer root = INVALID_POINTER;
+        fread(&root, PTR, sizeof(char), tblFile);
+        
+		// Lecture du nextFreePtr
+		NodePointer nextFree = INVALID_POINTER;
+		fread(&nextFree, PTR, sizeof(char), tblFile);
       
 		Index* index = (Index*)calloc(1, sizeof(Index));
 		assert(index);
 		index->table = table;
+		printf("Index root offset : %llu\n", root == INVALID_POINTER ? -1 : root);
+        // Index_load(table, i, folderPath, table->attributes[i].index->rootPtr, INVALID_POINTER);
 
 		fread(&index->rootPtr, PTR, sizeof(char), tblFile);
 		fread(&index->nextFreePtr, PTR, sizeof(char), tblFile);
-		printf("Root: %llu\n", index->rootPtr);
         table->attributes[i].index = index; 
-        
-        // table->attributes[i].index = INVALID_POINTER;
-	    // table->attributes[i].index->nextFreePtr = &tmp;
     }
     
 
@@ -397,13 +404,14 @@ Entry *Entry_create(Table *table)
     return entry;
 }
 
-void Entry_destroy(Entry *self) {  
-   assert(self);  
-   for (int i = 0; i < self->attributeCount; i++) {  
-       free(self->values[i]);  
-   }  
-   free(self->values);   
-   free(self);   
+void Entry_destroy(Entry *self) {
+	if (self == NULL) return;
+    for (int i = 0; i < self->attributeCount; i++) {  
+        printf("self->values[i] : %s\n", self->values[i]);
+        free(self->values[i]);  
+    }  
+    free(self->values);   
+    free(self);   
 }
 
 

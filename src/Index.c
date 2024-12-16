@@ -134,8 +134,6 @@ Index* Index_create(Table* table, int attributeIndex, char* folderPath)
 	FILE* indexFile = fopen(path, "wb+");
 	AssertNew(indexFile);
 
-	// Ouverture du fichier de données
-
 	// Initialisation de l'index
 	Index* index = (Index*)calloc(1, sizeof(Index));
 	AssertNew(index);
@@ -156,10 +154,7 @@ Index* Index_create(Table* table, int attributeIndex, char* folderPath)
 
 		printf("\n\nEntry : %d / %s | Offset (de lecture du .dat) : %lld\n", i, entry->values[attributeIndex], offset);
 		Index_insertEntry(index, entry->values[attributeIndex], offset);
-
 	}
-
-	// Entry_destroy(entry);
 
 	printf("\n\nPrint de l'arbre (prefixe) : \n");
 	Index_printRec(index, index->rootPtr);
@@ -176,7 +171,7 @@ void Index_destroy(Index* self)
 Index* Index_load(Table* table, int attributeIndex, char* folderPath, NodePointer rootPtr, NodePointer nextFreePtr)
 {
 	char path[256];
-	snprintf(path, sizeof(path), "%s/%s_%d.idx", folderPath, table->name, attributeIndex);
+	snprintf(path, sizeof(path), "%s/correction/%s_%d.idx", folderPath, table->name, attributeIndex);
 	FILE* indexFile = fopen(path, "rb+");
 	assert(indexFile);
 
@@ -187,117 +182,33 @@ Index* Index_load(Table* table, int attributeIndex, char* folderPath, NodePointe
 	index->attributeIndex = attributeIndex;
 	index->attributeSize = table->attributes[attributeIndex].size;
 	index->indexFile = indexFile;
+	index->rootPtr = rootPtr;
+	index->nextFreePtr = nextFreePtr;
 
-	fread(&index->rootPtr, sizeof(index->rootPtr), 1, indexFile);
-	fread(&index->nextFreePtr, sizeof(index->nextFreePtr), 1, indexFile);
+	//IndexNode root;
+	//Index_readNode(index, &root, index->rootPtr);
 
-	IndexNode root;
-	Index_readNode(index, &root, index->rootPtr);
+	//fread(&root.leftPtr, PTR, 1, indexFile);
+	//fread(&root.rightPtr, PTR, 1, indexFile);
+	//fread(&root.height, PTR, 1, indexFile);
+	//fread(&root.entryPtr, PTR, 1, indexFile);
+	//fread(&root.key, sizeof(table->attributes[attributeIndex]), 1, indexFile);
+	//root.entryPtr = INVALID_POINTER;
 
-	fread(&root.leftPtr, PTR, 1, indexFile);
-	fread(&root.rightPtr, PTR, 1, indexFile);
-	fread(&root.height, PTR, 1, indexFile);
-	fread(&root.entryPtr, PTR, 1, indexFile);
-	fread(&root.key, sizeof(table->attributes[attributeIndex]), 1, indexFile);
-	root.entryPtr = INVALID_POINTER;
-
-	printf("Index loaded\n");
-	printf("Key: %s\n", root.key);
-
+	printf("Index %d loaded\n", attributeIndex);
 	printf("RootPtr: %lld\n", index->rootPtr);
 	printf("NextFreePtr: %lld\n", index->nextFreePtr);
 	printf("AttributeSize: %lld\n", index->attributeSize);
 	printf("AttributeIndex: %d\n", index->attributeIndex);
-	printf("Table: %s\n", table->name);
-	printf("Root: %s\n", root.key);
-	printf("Root leftPtr: %lld\n", root.leftPtr);
-	printf("Root rightPtr: %lld\n", root.rightPtr);
-	printf("Root height: %lld\n", root.height);
-
-	printf("Root entryPtr: %lld\n", root.entryPtr);
-
 
 	return index;
-
-}
-
-bool Index_find(Index* self, char* key, NodePointer* parentPtr) {
-	
-	IndexNode node;
-	NodePointer nodePtr = self->rootPtr;
-
-	// Si l'arbre est vide
-	if (nodePtr == INVALID_POINTER) {
-		*parentPtr = INVALID_POINTER;
-		return false;
-	}
-
-	while (true) {
-		*parentPtr = nodePtr;
-		Index_readNode(self, &node, nodePtr);
-
-		int cmp = strcmp(key, node.key);
-		if (cmp == 0) return true;
-
-		else if (cmp < 0) {
-			if (node.leftPtr == INVALID_POINTER) return false;
-			nodePtr = node.leftPtr;
-		}
-
-		else {
-			if (node.rightPtr == INVALID_POINTER) return false;
-			nodePtr = node.rightPtr;
-		}
-	}
-}
-
-void Index_insertEntry2(Index* self, char* key, EntryPointer entryPtr) {
-
-	// Creer le node qui va servir a stocker ce qu'on va read
-	IndexNode parentNode;
-
-	// Pointeur sur le parent
-	NodePointer parentPtr = INVALID_POINTER; 
-
-	// Trouver l'emplacement approprié pour insérer le nouveau noeud
-	bool find = Index_find(self, key, &parentPtr);
-	printf("	- ParentPtr : %lld\n", parentPtr != INVALID_POINTER ? parentPtr : -1);
-
-	// Creation d'un noeud
-	NodePointer newNodePtr = Index_createNode(self, key, entryPtr);
-
-	// Si l'arbre est vide, le nouveau noeud devient la racine
-	if (parentPtr == INVALID_POINTER) {
-		self->rootPtr = newNodePtr;
-		printf("	- RootPtr: %lld\n	- newNodePtr : %lld\n", self->rootPtr, newNodePtr);
-		return;
-	}
-
-	else {
-		Index_readNode(self, &parentNode, parentPtr); //ca marche pas ici
-		int cmp = strcmp(key, parentNode.key);
-
-		if (cmp <= 0) {
-			Index_setLeftNode(self, parentPtr, newNodePtr);
-			printf("	- New left node \n");
-		}
-
-		else {
-			Index_setRightNode(self, parentPtr, newNodePtr);
-			printf("	- New right node \n");
-		}
-	}
-
-	Index_balance(self, newNodePtr);
-	return;
 }
 
 void Index_insertEntry(Index* self, char* key, EntryPointer entryPtr)
 {
 	NodePointer nodePtr = Index_createNode(self, key, entryPtr);
 
-	if (self->rootPtr == INVALID_POINTER)
-	{
+	if (self->rootPtr == INVALID_POINTER) {
 		self->rootPtr = nodePtr;
 		return;
 	}
@@ -305,12 +216,9 @@ void Index_insertEntry(Index* self, char* key, EntryPointer entryPtr)
 	// Recherche le parent parmi les feuilles
 	NodePointer parentPtr = self->rootPtr;
 	IndexNode parent;
-	while (true)
-	{
+	while (true) {
 		Index_readNode(self, &parent, parentPtr);
-		NodePointer childPtr =
-			strcmp(key, parent.key) <= 0 ?
-			parent.leftPtr : parent.rightPtr;
+		NodePointer childPtr = strcmp(key, parent.key) <= 0 ? parent.leftPtr : parent.rightPtr;
 
 		if (childPtr == INVALID_POINTER) break;
 
@@ -318,19 +226,17 @@ void Index_insertEntry(Index* self, char* key, EntryPointer entryPtr)
 	}
 
 	// Ajoute le nouveau noeud
-	if (strcmp(key, parent.key) <= 0)
-	{
+	if (strcmp(key, parent.key) <= 0) {
 		Index_setLeftNode(self, parentPtr, nodePtr);
 	}
-	else
-	{
+
+	else {
 		Index_setRightNode(self, parentPtr, nodePtr);
 	}
 
 	// Rééquilibre l'arbre
 	Index_balance(self, nodePtr);
 }
-
 
 int64_t Index_getNodeHeight(Index* self, NodePointer nodePtr)
 {
@@ -422,8 +328,7 @@ void Index_replaceChild(Index* self, NodePointer parentPtr, NodePointer currChil
 	if (parentPtr == INVALID_POINTER) {
 		self->rootPtr = newChildPtr;
 	}
-	else
-	{
+	else {
 		IndexNode parent;
 		Index_readNode(self, &parent, parentPtr);
 
@@ -564,8 +469,7 @@ void Index_searchRec(Index* self, NodePointer nodePtr, Filter* filter, SetEntry*
 	IndexNode node;
 	Index_readNode(self, &node, nodePtr);
 
-	switch (filter->requestOp)
-	{
+	switch (filter->requestOp) {
 	case OP_EQ:
 		if (strcmp(node.key, filter->key1) == 0)
 		{
@@ -587,8 +491,7 @@ void Index_searchRec(Index* self, NodePointer nodePtr, Filter* filter, SetEntry*
 		}
 		break;
 	case OP_GT:
-		if (strcmp(node.key, filter->key1) > 0)
-		{
+		if (strcmp(node.key, filter->key1) > 0) {
 			SetEntry_insert(resultSet, node.entryPtr);
 			Index_searchRec(self, node.rightPtr, filter, resultSet);
 		}
@@ -609,8 +512,7 @@ void Index_searchRec(Index* self, NodePointer nodePtr, Filter* filter, SetEntry*
 	}
 }
 
-NodePointer Index_searchEntryRec(Index* self, char* key, EntryPointer entryPtr, NodePointer nodePtr)
-{
+NodePointer Index_searchEntryRec(Index* self, char* key, EntryPointer entryPtr, NodePointer nodePtr) {
 	if (nodePtr == INVALID_POINTER) return INVALID_POINTER;
 
 	IndexNode node;
@@ -628,7 +530,7 @@ NodePointer Index_searchEntryRec(Index* self, char* key, EntryPointer entryPtr, 
 
 NodePointer Index_searchEntry(Index* self, char* key, EntryPointer entryPtr)
 {
-	return Index_searchEntryRec(self, key, entryPtr, self->rootPtr); //elle est implementée tqt
+	return Index_searchEntryRec(self, key, entryPtr, self->rootPtr);
 }
 
 void Index_debugPrint(Index* self, int depth, NodePointer nodePtr) {
@@ -674,7 +576,7 @@ void Index_printRec(Index* self, NodePointer nodePtr) {
 	// Le recursif
 	if (node.leftPtr != INVALID_POINTER) Index_printRec(self, node.leftPtr);
 	
-	if (nodePtr == 0) printf("(root->)");
+	if (node.parentPtr == INVALID_POINTER) printf("(root->)");
 	printf("[%s|%d] ", node.key, Index_getNodeHeight(self, nodePtr));
 
 	if (node.rightPtr != INVALID_POINTER) Index_printRec(self, node.rightPtr);
