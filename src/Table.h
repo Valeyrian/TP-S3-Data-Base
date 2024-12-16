@@ -222,6 +222,6 @@ void Entry_destroy(Entry *self);
 /// @param self l'entrée.
 void Entry_print(Entry *self);
 
-void Header_read(Table* table, FILE* csvFile);
+int* Header_read(Table* table, FILE* csvFile);
 
 void Entry_read(Table* table, Entry* entry, FILE* csvFile);

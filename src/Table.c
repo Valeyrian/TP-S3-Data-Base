@@ -7,6 +7,8 @@
 #include "Table.h"
 #include "Index.h"
 
+int scanfRead;
+
 int Filter_test(Filter *self, char *nodeKey)
 {
     int cmp1 = strcmp(nodeKey, self->key1);  
@@ -63,62 +65,78 @@ Table *Table_createFromCSV(char *namePath, char *folderPath) {
     // Ouvre le fichier csv
     char fileName[256];
 	snprintf(fileName, 256, "%s/%s.csv", folderPath, namePath);
-    FILE* csvFile = fopen(fileName, "r");
+    FILE* csvFile = fopen(namePath, "r"); // j'ai modif ici
     assert(csvFile);
 
     // Lecture du hexader
-    Header_read(table, csvFile);
+    int* isIndex = Header_read(table, csvFile);
 
     // Creation de la table dans le .tbl
     strcpy(table->folderPath, folderPath);
     Table_writeHeader(table);
 
     // Lecture des entrées 
-    Entry* entry = Entry_create(table);
+    Entry* entry = Entry_create(table); 
 
     // Creation du fichier .dat
-    snprintf(fileName, 256, "%s/%s.dat", folderPath, namePath);
+    snprintf(fileName, 256, "%s/%s.dat", folderPath, table->name);
     table->dataFile = fopen(fileName, "w");
 
     assert(table->dataFile);
-    Entry_create(table);
+    //Entry_create(table);
 
     FSeek(table->dataFile, 0, SEEK_END);
 
     for (int i = 0; i < table->entryCount; i++) {
         EntryPointer entryPointer = FTell(table->dataFile);
         
-        // Lecture des entrées 
+        // Lecture des entrées
         Entry_read(table, entry, csvFile);
 
 		//affichage des entrées
-		Entry_print(entry);
+		// Entry_print(entry);
 
         // Ecriture des entrées
         Table_writeEntry(table, entry, entryPointer);
     }
 
+    table->entrySize = 8;
+    for (int i = 0; i < table->attributeCount; i++)
+        table->entrySize += table->attributes[i].size;
+
+   // for (int i = 0; i < table->attributeCount; i++) {
+   //     if (isIndex[i] == 1) {
+   //         //printf("Creation du fichier d'index %d : \n", i);
+   //         Index* index = Index_create(table, i, folderPath);
+			////printf("Index : %lld\n", index);
+   //         free(index); 
+   //     }
+   // }
+    //Entry_destroy(entry); 
     fclose(csvFile);
     return table;
 }
 
 void Entry_read(Table* table, Entry* entry, FILE* csvFile) {
-    fscanf(csvFile, "\n");
+    scanfRead = fscanf(csvFile, "\n");  
     for (int i = 0; i < table->attributeCount; i++) 
     {
-        memset(entry->values[i], 0, table->attributes[i].size);
-        fscanf(csvFile, "%[^;];", entry->values[i]);
+        memset(entry->values[i], 0, table->attributes[i].size + 1); //+1 pour le dernier char
+        scanfRead = fscanf(csvFile, "%[^;];", entry->values[i]);
     }
 }
 
-void Header_read(Table* table, FILE* csvFile) {
+int* Header_read(Table* table, FILE* csvFile) {
     
     // Lire le nom de la table
-    fscanf(csvFile, "%[^; ];", table->name);
+    scanfRead = fscanf(csvFile, "%[^; ];", table->name);
 
     // Lire le nombre d’attributs 
-    fscanf(csvFile, "%d;", &table->attributeCount);
-    // printf("%s;%d;\n", table->name, table->attributeCount);
+    scanfRead = fscanf(csvFile, "%d;", &table->attributeCount);
+
+    // Creer le tableau des attributs indéxé
+    int* isIndex = (int*)calloc(table->attributeCount, sizeof(int));
+    assert(isIndex);
 
     // Lire tous les attributs
     table->attributes = (Attribute*)calloc(table->attributeCount, sizeof(Attribute));
@@ -126,19 +144,20 @@ void Header_read(Table* table, FILE* csvFile) {
 
     for (int i = 0; i < table->attributeCount; i++) {
         // Lire le nom de l'attribut
-        fscanf(csvFile, "\n%[^; ];", table->attributes[i].name);
+        scanfRead = fscanf(csvFile, "\n%[^; ];", table->attributes[i].name);
 
         // Lire le nombre d'octet de l'attribut
-        fscanf(csvFile, "%llu;", &table->attributes[i].size);
+        scanfRead = fscanf(csvFile, "%llu;", &table->attributes[i].size);
 
-        // Lire l'index de l'attribut
-        fscanf(csvFile, "%lld;", &table->attributes[i].index);
-
+        // Lire si l'attribut est indéxé
+        scanfRead = fscanf(csvFile, "%d;", &isIndex[i]);
         // printf("(%s);%d;%d;\n", table->attributes[i].name, table->attributes[i].size, table->attributes[i].index);
     };
 
     // Lire le nombre d'entrées
-    fscanf(csvFile, "\n%lld;", &table->entryCount);
+    scanfRead = fscanf(csvFile, "\n%lld;", &table->entryCount);
+
+    return isIndex;
 }
 
 void Table_writeData(Table* self) 
@@ -149,8 +168,8 @@ void Table_writeData(Table* self)
 void Table_writeHeader(Table* self)
 {
     // Ouverture du fichier 
-    char fileName[256];
-    snprintf(fileName, 256, "%s/%s.tbl", self->folderPath, self->name);
+    char fileName[648];
+    snprintf(fileName, 648, "%s/%s.tbl", self->folderPath, self->name);
     FILE* tblFile = fopen(fileName, "w");
 
     // Ecriture du nom de la table dans le fichier 
@@ -167,10 +186,9 @@ void Table_writeHeader(Table* self)
         
 		if (self->attributes[i].index) {
 			// creation de l'index
-			printf("Creation de l'index %d\n", i);
-			Index* index = Index_create(self, i, self->folderPath);
-			fwrite(index->rootPtr, PTR, 1, tblFile);
-			fwrite(index->nextFreePtr, PTR, 1, tblFile);
+			// Index* index = Index_create(self, i, self->folderPath);
+			fwrite("1", PTR, 1, tblFile);
+			fwrite("1", PTR, 1, tblFile);
 		}
         else 
         {
@@ -188,11 +206,14 @@ void Table_writeHeader(Table* self)
     fclose(tblFile);
 }
 
-Table *Table_load(char *namePath, char *folderPath) {   
+Table* Table_load(char* namePath, char* folderPath) {   //j'ai modif les fileOpen
     // Ouverture du fichier de données en lecture
     char tblName[256];
     snprintf(tblName, 256, "%s/%s.tbl", folderPath, namePath);
-    FILE* tblFile = fopen(tblName, "r");
+	
+    
+	//FILE* tblFile = fopen(tblName, "r"); J'ai modif ici
+	FILE* tblFile = fopen(namePath, "r");
     assert(tblFile); 
 
     // Allocation de la table  
@@ -231,12 +252,11 @@ Table *Table_load(char *namePath, char *folderPath) {
 
 		fread(&index->rootPtr, PTR, sizeof(char), tblFile);
 		fread(&index->nextFreePtr, PTR, sizeof(char), tblFile);
-		printf("Root: %llu\n", index->rootPtr);
+		//printf("Root: %llu\n", index->rootPtr);
         table->attributes[i].index = index; 
         
         // table->attributes[i].index = INVALID_POINTER;
 	    // table->attributes[i].index->nextFreePtr = &tmp;
-
     }
     
 
@@ -254,7 +274,9 @@ Table *Table_load(char *namePath, char *folderPath) {
     // Ouverture du fichier .dat
     char datFile[256];
     snprintf(datFile, 256, "%s/%s.dat", folderPath, table->name);
-    table->dataFile = fopen(datFile, "r+b");
+    
+	//table->dataFile = fopen(datFile, "r+b"); j'ai modif ici
+    table->dataFile = fopen(folderPath, "r+b");
 
 	fclose(tblFile);
     //Table_debugPrint(table);
@@ -270,7 +292,7 @@ void Table_writeEntry(Table *table, Entry *entry, EntryPointer entryPointer)
     fwrite(&(entry->nextFreePtr), sizeof(EntryPointer), 1, table->dataFile);
     for (int i = 0; i < table->attributeCount; i++) {
         Attribute* attribute = table->attributes + i;
-        fwrite(entry->values[i], attribute->size, 1, table->dataFile);
+        fwrite(entry->values[i], attribute->size, sizeof(char), table->dataFile);
     }
 }
 
@@ -309,7 +331,8 @@ void Table_search(Table *self, Filter *filter, SetEntry *resultSet) {
         Table_readEntry(self, entry, ptr);
 		char* value = entry->values[filter->attributeIndex];
 		
-        if (Filter_test(filter, value) & FILTER_FOUND) SetEntry_insert(resultSet, ptr);
+        if (Filter_test(filter, value) & FILTER_FOUND)
+            SetEntry_insert(resultSet, ptr);
     }
 }
 
@@ -376,21 +399,25 @@ Entry *Entry_create(Table *table)
     entry->nextFreePtr = INVALID_POINTER;
 
     assert(entry->values);
-    for (int i = 0; i < table->attributeCount; i++) {
-        entry->values[i] = (char*)calloc(1, sizeof(table->attributes[i].size));
+    for (int i = 0; i < table->attributeCount; i++)
+    {
+        entry->values[i] = (char*)calloc(table->attributes[i].size + 1, sizeof(char)); // +1 pour le caractère nul
     }
     return entry;
 }
 
-void Entry_destroy(Entry *self) {
-    if (!self) return;
-    
-	for (int i = 0; i < self->attributeCount; i++) {
-		free(self->values[i]);
-	}
-	free(self);
-}
 
+void Entry_destroy(Entry *self) 
+{    
+    assert(self);
+    for (int i = 0; i < self->attributeCount; i++) 
+    { 
+        //if (self->values[i][0] != '\0')
+            free(self->values[i]);
+    }
+    free(self->values);   
+    free(self);   
+}
 
 void Entry_print(Entry *self) {
 	assert(self);

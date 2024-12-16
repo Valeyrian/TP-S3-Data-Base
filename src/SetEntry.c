@@ -50,7 +50,7 @@ void SetEntryNode_update(SetEntryNode *node)
 
     int hr = (node->rightChild) ? node->rightChild->height : -1;
     int hl = (node->leftChild) ? node->leftChild->height : -1;
-    int h = 1 + (hr > hl ? hr : hl);
+    node->height = 1 + (hr > hl ? hr : hl);
 }
 
 int SetEntryNode_getBalance(SetEntryNode *node)
