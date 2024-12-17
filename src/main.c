@@ -104,8 +104,7 @@ int main(int argc, char** argv) {
         EntryPointer entryPtr = SetEntryIter_getValue(it);
         
         Table_readEntry(table, entry, entryPtr);
-        printf("----\n"); 
-        Entry_print(entry);
+        printf("----\n");
         SetEntryIter_next(it);
     }
     

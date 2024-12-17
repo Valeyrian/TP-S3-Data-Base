@@ -157,7 +157,6 @@ bool SetEntry_find(SetEntry *self, EntryPointer data, SetEntryNode **res)
     {
         if (data == node->data)
         {
-			// printf("Data : %lld | node->data %lld\n", (long long)data, (long long)node->data);
             *res = node;
             return true;
         }
@@ -266,6 +265,7 @@ bool SetEntry_remove(SetEntry *self, EntryPointer data)
         return false;
     }
 
+	// Permet de trouver le noeud à supprimer
     SetEntryNode *node = NULL;
     if (SetEntry_find(self, data, &node) == false)
     {
@@ -274,22 +274,21 @@ bool SetEntry_remove(SetEntry *self, EntryPointer data)
     assert(node != NULL);
 
     SetEntryNode *start = NULL;
-    if (node->leftChild == NULL)
-    {
+    if (node->leftChild == NULL) {
         // Remplacement par le fils droit
         SetEntry_replaceChild(self, node->parent, node, node->rightChild);
         start = node->parent;
         SetEntryNode_destroy(node);
     }
-    else if (node->rightChild == NULL)
-    {
+
+    else if (node->rightChild == NULL) {
         // Remplacement par le fils gauche
         SetEntry_replaceChild(self, node->parent, node, node->leftChild);
         start = node->parent;
         SetEntryNode_destroy(node);
     }
-    else
-    {
+
+    else {
         // Le noeud a deux fils
         // On l'échange avec sa valeur immédiatement inférieure (qui n'a plus de fils droit)
         SetEntryNode *maxLeft = SetEntryNode_maximum(node->leftChild);

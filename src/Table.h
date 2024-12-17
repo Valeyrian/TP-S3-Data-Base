@@ -221,7 +221,7 @@ void Entry_destroy(Entry *self);
 /// @brief Affiche une entrée sur la sortie standard.
 /// 
 /// @param self l'entrée.
-void Entry_print(Entry *self);
+void Entry_print(Table *self);
 
 int* Header_read(Table* table, FILE* csvFile);
 
