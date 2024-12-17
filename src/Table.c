@@ -57,16 +57,13 @@ int Filter_test(Filter *self, char *nodeKey)
 }
 
 
-Table *Table_createFromCSV(char *namePath, char *folderPath) {
+Table *Table_createFromCSV(char *csvPath, char *folderPath) {
 
     // Creer la table
     Table* table = calloc(1, sizeof(Table));
     assert(table);
     
-    // Ouvre le fichier csv
-    char fileName[256];
-	snprintf(fileName, 256, "%s/%s.csv", folderPath, namePath);
-    FILE* csvFile = fopen(namePath, "r+b"); // j'ai modif ici
+    FILE* csvFile = fopen(csvPath, "r");
     assert(csvFile);
 
     // Lecture du header
@@ -79,7 +76,8 @@ Table *Table_createFromCSV(char *namePath, char *folderPath) {
     Entry* entry = Entry_create(table); 
 
     // Creation du fichier .dat
-    snprintf(fileName, 256, "%s/%s.dat", folderPath, namePath);
+	char fileName[256];
+    snprintf(fileName, 256, "%s/%s.dat", folderPath, table->name);
     table->dataFile = fopen(fileName, "wb+");
 
     assert(table->dataFile);
@@ -202,34 +200,26 @@ void Table_writeHeader(Table* self) {
     fclose(tblFile);
 }
 
-Table* Table_load(char* namePath, char* folderPath) {   //j'ai modif les fileOpen name path pour le tbl et folder path pour le dat
-    // Ouverture du fichier de données en lecture
-    char tblName[256];
-    snprintf(tblName, 256, "%s/%s.tbl", folderPath, namePath);
-    
-	//FILE* tblFile = fopen(tblName, "r"); J'ai modif ici
-	FILE* tblFile = fopen(namePath, "rb");
-    assert(tblFile); 
+Table* Table_load(char* tblPath, char* dataPath) {   //j'ai modif les fileOpen name path pour le tbl et folder path pour le dat
 
-    
+	FILE* tblFile = fopen(tblPath, "rb");
+    assert(tblFile); 
 
     // Allocation de la table  
     Table* table = calloc(1, sizeof(Table)); 
     assert(table);
 
     //ajout du dataFile
-
-    table->dataFile = fopen(folderPath, "r+b"); 
-
+    table->dataFile = fopen(dataPath, "r+b"); 
 
     // Ajout du folderPath
     char* localPath = (char*)calloc(1024, sizeof(char)); 
-    const char* lastSlash = strrchr(namePath, '/'); // Windows (séparateur `\\`)
+    const char* lastSlash = strrchr(tblPath, '/'); // Windows (séparateur `\\`)
 
     if (lastSlash) {
 
-        size_t length = lastSlash - namePath; // Longueur du chemin du répertoire parent
-        strncpy(localPath, namePath, length);
+        size_t length = lastSlash - tblPath; // Longueur du chemin du répertoire parent
+        strncpy(localPath, tblPath, length);
         localPath[length] = '\0';
     }
     else
@@ -269,7 +259,7 @@ Table* Table_load(char* namePath, char* folderPath) {   //j'ai modif les fileOpe
 		fread(&nextFree[i], PTR, sizeof(char), tblFile);
         
 		if (root[i] != INVALID_POINTER) {
-			table->attributes[i].index = Index_load(table, i, folderPath, root[i], nextFree[i]);
+			table->attributes[i].index = Index_load(table, i, dataPath, root[i], nextFree[i]);
 			
 		}
 		else 
@@ -288,9 +278,7 @@ Table* Table_load(char* namePath, char* folderPath) {   //j'ai modif les fileOpe
     fread(&table->nextFreePtr, PTR, sizeof(char), tblFile);
 
     // Ouverture du fichier .dat
-    char datFile[256];
-    snprintf(datFile, 256, "%s/%s.dat", folderPath, table->name);
-    table->dataFile = fopen(folderPath, "rb+");
+    table->dataFile = fopen(dataPath, "rb+");
 
 	fclose(tblFile);
     //Table_debugPrint(table);

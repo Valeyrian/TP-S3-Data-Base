@@ -163,10 +163,8 @@ void Index_destroy(Index* self)
 	free(self);
 }
 
-Index* Index_load(Table* table, int attributeIndex, char* folderPath, NodePointer rootPtr, NodePointer nextFreePtr)
-{
-	char path[256];
-	snprintf(path, sizeof(path), "%s/correction/%s_%d.idx", folderPath, table->name, attributeIndex);
+Index* Index_load(Table* table, int attributeIndex, char* path, NodePointer rootPtr, NodePointer nextFreePtr) {
+
 	FILE* indexFile = fopen(path, "rb+");
 	assert(indexFile);
 
@@ -448,8 +446,9 @@ void Index_searchRec(Index* self, NodePointer currentNodePtr, Filter* filter, Se
 
 	IndexNode currentNode;
 	Index_readNode(self, &currentNode, currentNodePtr);
-	
-	switch (Filter_test(filter, currentNode.key)) {
+	int find = Filter_test(filter, currentNode.key);
+
+	switch (find) {
 	case FILTER_FOUND:
 		SetEntry_insert(resultSet, currentNode.entryPtr);
 		break;

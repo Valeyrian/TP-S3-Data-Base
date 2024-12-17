@@ -10,10 +10,10 @@
 #include "Ui.h" 
 #include "Menus.h"
 
-#if 1
+#if 0
 int main(int argc, char** argv)
 {
-	Table* table = Table_load("C:/Users/valey/Documents/Test_tp/psittamulgiformes.tbl", "C:/Users/valey/Documents/Test_tp/psittamulgiformes.dat");
+	Table* table = Table_load("C:/Users/manua/Desktop/TP_Final_2031/TP-S3-Data-Base/data/intro/correction/psittamulgiformes.tbl", "C:/Users/manua/Desktop/TP_Final_2031/TP-S3-Data-Base/data/intro/correction/psittamulgiformes.dat");
 	mergeFromCSV(table);
 	//insertInDatabase(table);
 }
@@ -59,43 +59,28 @@ int main() {
 }
 #endif
 
-#if 0
+#if 1
 // Exemple de main() :
 // Création d'une table à partir d'un CSV.
-int main(int argc, char** argv)
-{
-    char *correctionPath = "../data/intro/correction";
-    char* folderPath = "../data/intro";
-    char *namePath = "psittamulgiformes";
+int main(int argc, char** argv) {
 
-	Table* table = Table_createFromCSV(namePath, folderPath);
+    // Creation de la table
+	Table* table = Table_createFromCSV("C:/Users/manua/Desktop/TP_Final_2031/TP-S3-Data-Base/data/intro/psittamulgiformes.csv", "C:/Users/manua/Desktop/TP_Final_2031/TP-S3-Data-Base/data/intro/");
+	// Table_debugPrint(table);
     free(table);
-    
-	// Table_debugPrint(table); 
-    
-    //Table* table = Table_load(namePath, folderPath); 
-	//Table_debugPrint(table); 
-  
-    //Index_create(table, 1, correctionPath);
-
-	//Table* table = Table_createFromCSV(namePath, folderPath);
-	//Table_debugPrint(table);
 	
     // Table_destroy(table); table = NULL;
     // return EXIT_SUCCESS;
 }
 #endif
 
-#if 1
+#if 0
 // Exemple de main() :
 // Recherche dans une table sur un attribut indexé
-int main(int argc, char** argv)
-{
-    char* folderPath = "../data/intro";
-    char* namePath = "psittamulgiformes";
+int main(int argc, char** argv) {
 
     // Ouverture de la table
-    Table *table = Table_load(namePath, folderPath);
+    Table* table = Table_load("C:/Users/manua/Desktop/TP_Final_2031/TP-S3-Data-Base/data/intro/correction/psittamulgiformes.tbl", "C:/Users/manua/Desktop/TP_Final_2031/TP-S3-Data-Base/data/intro/correction/psittamulgiformes.dat");
     // Table_debugPrint(table);
 
     // Création du filtre de la recherche
