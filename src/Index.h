@@ -168,3 +168,7 @@ void Index_debugPrint(Index *self, int depth, NodePointer nodePtr);
 
 
 void Index_printRec(Index* self, NodePointer nodePtr);
+
+NodePointer Index_getSubtreeMaximum(Index* self, NodePointer nodePtr);
+
+void Index_printRec(Index* self, NodePointer nodePtr);

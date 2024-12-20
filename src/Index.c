@@ -72,36 +72,33 @@ NodePointer Index_createNode(Index* self, char* key, EntryPointer entryPtr)
 	return nodePtr;
 }
 
-void Index_destroyNode(Index* self, NodePointer nodePtr)
-{
+void Index_destroyNode(Index* self, NodePointer nodePtr) {
 	assert(nodePtr != INVALID_POINTER);
+
 
 	IndexNode node;
 	Index_readNode(self, &node, nodePtr);
+	printf("Destroying node %s\n", node.key);
 
 	// Cas 1: c'est une feiuille
 	if (node.leftPtr == INVALID_POINTER && node.rightPtr == INVALID_POINTER)
-	{
 		Index_replaceChild(self, node.parentPtr, nodePtr, INVALID_POINTER);
-	}
+	
 	// Cas 2: il n'y a qu'un seul enfant
 	else if (node.leftPtr == INVALID_POINTER)
-	{
 		Index_replaceChild(self, node.parentPtr, nodePtr, node.rightPtr);
-	}
+	
 	else if (node.rightPtr == INVALID_POINTER)
-	{
 		Index_replaceChild(self, node.parentPtr, nodePtr, node.leftPtr);
-	}
+
 	// Cas 3: il y a 2 enfants
-	else
-	{
+	else {
 		NodePointer maxLeftPtr = Index_getSubtreeMaximum(self, node.leftPtr);
 		IndexNode maxLeftNode;
 		Index_readNode(self, &maxLeftNode, maxLeftPtr);
 
-		// remplacer le noeud par le maximum du sous-arbre gauche pour garder l'equilibre
-		strncpy(node.key, maxLeftNode.key, sizeof(node.key));
+		// Remplacer le noeud par le maximum du sous-arbre gauche pour garder l'equilibre
+		Index_replaceChild(self, node.parentPtr, nodePtr, maxLeftPtr);
 		node.entryPtr = maxLeftNode.entryPtr;
 		Index_writeNode(self, &node, nodePtr);
 		Index_destroyNode(self, maxLeftPtr);
@@ -113,16 +110,6 @@ void Index_destroyNode(Index* self, NodePointer nodePtr)
 	node.nextFreePtr = self->nextFreePtr;
 	self->nextFreePtr = nodePtr;
 	Index_writeNode(self, &node, nodePtr);
-
-	// Rééquilibrer l'arbre
-	//NodePointer parentPtr = node.parentPtr;
-	//while (parentPtr != INVALID_POINTER)
-	//{
-	//	Index_updateNode(self, parentPtr);
-	//	Index_balance(self, parentPtr);
-	//	Index_readNode(self, &node, parentPtr);
-	//	parentPtr = node.parentPtr;
-	//}
 }
 
 Index* Index_create(Table* table, int attributeIndex, char* folderPath)
@@ -168,6 +155,7 @@ Index* Index_load(Table* table, int attributeIndex, char* path, NodePointer root
 	char indexPath[256]; 
 	snprintf(indexPath, 256, "%s/%s_%d.idx", path, table->name, attributeIndex); 
 	FILE* indexFile = fopen(indexPath, "rb+"); 
+
 	assert(indexFile);
 
 	Index* index = (Index*)calloc(1, sizeof(Index));
@@ -295,8 +283,7 @@ NodePointer Index_getSubtreeMaximum(Index* self, NodePointer nodePtr) {
 	IndexNode node;
 	Index_readNode(self, &node, nodePtr);
 
-	while (node.rightPtr != INVALID_POINTER)
-	{
+	while (node.rightPtr != INVALID_POINTER) {
 		nodePtr = node.rightPtr;
 		Index_readNode(self, &node, node.rightPtr);
 	}
@@ -310,6 +297,8 @@ void Index_replaceChild(Index* self, NodePointer parentPtr, NodePointer currChil
 	if (parentPtr == INVALID_POINTER) {
 		self->rootPtr = newChildPtr;
 	}
+
+	
 	else {
 		IndexNode parent;
 		Index_readNode(self, &parent, parentPtr);
@@ -331,6 +320,7 @@ void Index_replaceChild(Index* self, NodePointer parentPtr, NodePointer currChil
 		newChild.parentPtr = parentPtr;
 		Index_writeNode(self, &newChild, newChildPtr);
 	}
+
 }
 
 void Index_rotateLeft(Index* self, NodePointer nodePtr) {
@@ -527,7 +517,7 @@ void Index_printRec(Index* self, NodePointer nodePtr) {
 	if (node.leftPtr != INVALID_POINTER) Index_printRec(self, node.leftPtr);
 	
 	if (node.parentPtr == INVALID_POINTER) printf("(root->)");
-	printf("[%s|%d] ", node.key, Index_getNodeHeight(self, nodePtr));
+	printf("(%s) ", node.key);
 
 	if (node.rightPtr != INVALID_POINTER) Index_printRec(self, node.rightPtr);
 
