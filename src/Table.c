@@ -22,37 +22,36 @@ int Filter_test(Filter *self, char *nodeKey)
             if (cmp1 > 0) res |= FILTER_SEARCH_LEFT;
             break;
 
-    case OP_LT:
-        if (cmp1 < 0) res |= FILTER_FOUND;
-        if (cmp1 >= 0) res |= FILTER_SEARCH_LEFT;
-        break;
+        case OP_LT:
+            if (cmp1 < 0) res |= FILTER_FOUND;
+            if (cmp1 >= 0) res |= FILTER_SEARCH_LEFT;
+            break;
 
-    case OP_LEQ:
-        if (cmp1 <= 0) res |= FILTER_FOUND;
-        if (cmp1 > 0) res |= FILTER_SEARCH_RIGHT;
-        break;
+        case OP_LEQ:
+            if (cmp1 <= 0) res |= FILTER_FOUND;
+            if (cmp1 > 0) res |= FILTER_SEARCH_RIGHT;
+            break;
 
-    case OP_GEQ:
-        if (cmp1 >= 0) res |= FILTER_FOUND;
-        if (cmp1 < 0) res |= FILTER_SEARCH_LEFT;
-        break;
+        case OP_GEQ:
+            if (cmp1 >= 0) res |= FILTER_FOUND;
+            if (cmp1 < 0) res |= FILTER_SEARCH_LEFT;
+            break;
 
-    case OP_GT:
-        if (cmp1 > 0) res |= FILTER_FOUND;
-        if (cmp1 <= 0) res |= FILTER_SEARCH_RIGHT;
-        break;
+        case OP_GT:
+            if (cmp1 > 0) res |= FILTER_FOUND;
+            if (cmp1 <= 0) res |= FILTER_SEARCH_RIGHT;
+            break;
 
-    case OP_BETW:
-        if (cmp1 >= 0 && cmp2 <= 0) res |= FILTER_FOUND;
-        if (cmp1 < 0) res |= FILTER_SEARCH_RIGHT; 
-        if (cmp2 > 0) res |= FILTER_SEARCH_LEFT;
-        break;
+        case OP_BETW:
+            if (cmp1 >= 0 && cmp2 <= 0) res |= FILTER_FOUND;
+            if (cmp1 < 0) res |= FILTER_SEARCH_RIGHT; 
+            if (cmp2 > 0) res |= FILTER_SEARCH_LEFT;
+            break;
 
-    default:
-        assert(false);
-        break;
+        default:
+            assert(false);
+            break;
     }
-
     return res;
 }
 
@@ -107,6 +106,26 @@ Table *Table_createFromCSV(char *csvPath, char *folderPath) {
             table->attributes[i].index = Index_create(table, i, folderPath);
 		else 
 			table->attributes[i].index = INVALID_POINTER;
+
+        // Test pour la supression d'un node
+		//NodePointer maxNodePtr = Index_getSubtreeMaximum(table->attributes[i].index, table->attributes[i].index->rootPtr);
+        //IndexNode maxNode;
+		//Index_readNode(table->attributes[i].index, &maxNode, maxNodePtr);
+
+		//printf("Max value index %d : %s\nL'arbre (bef) : ", i, maxNode.key);
+        //Index_printRec(table->attributes[i].index, table->attributes[i].index->rootPtr);
+        //printf("\n");
+
+        //Index_destroyNode(table->attributes[i].index, maxNodePtr);
+
+        //printf("\nL'arbre (aft) : ");
+        //Index_printRec(table->attributes[i].index, table->attributes[i].index->rootPtr);
+        //printf("\n");
+
+        //maxNodePtr = Index_getSubtreeMaximum(table->attributes[i].index, table->attributes[i].index->rootPtr);
+        //Index_readNode(table->attributes[i].index, &maxNode, maxNodePtr);
+		//printf("\nMax value index %d : %s\n", i, maxNode.key);
+
     }
 	
     // Entry_destroy(entry);
@@ -172,9 +191,9 @@ void Table_writeHeader(Table* self) {
 
     // Ecriture du nombre d'attribut
     fwrite(&self->attributeCount, INT, 1, tblFile);
-    uint64_t invalidPointer = INVALID_POINTER;
 
     // Ecriture des attributs
+    uint64_t invalidPointer = INVALID_POINTER;
     for (int i = 0; i < self->attributeCount; i++) {
         fwrite(self->attributes[i].name, MAX_NAME_SIZE, 1, tblFile);
         fwrite(&self->attributes[i].size, PTR, 1, tblFile);
@@ -209,8 +228,8 @@ Table* Table_load(char* tblPath, char* dataPath) {   //j'ai modif les fileOpen n
     Table* table = calloc(1, sizeof(Table)); 
     assert(table);
 
-    //ajout du dataFile
-    table->dataFile = fopen(dataPath, "r+b"); 
+    // Ajout du dataFile
+    table->dataFile = fopen(dataPath, "rb+"); 
 
     // Ajout du folderPath
     char* localPath = (char*)calloc(1024, sizeof(char)); 
@@ -222,10 +241,11 @@ Table* Table_load(char* tblPath, char* dataPath) {   //j'ai modif les fileOpen n
         strncpy(localPath, tblPath, length);
         localPath[length] = '\0';
     }
-    else
-    {
+
+    else {
         strcpy(localPath, ".");// Si aucun séparateur trouvé, c'est un fichier dans le répertoire courant
     }
+
     strcpy(table->folderPath, localPath);
     free(localPath); 
 
@@ -240,7 +260,7 @@ Table* Table_load(char* tblPath, char* dataPath) {   //j'ai modif les fileOpen n
 	assert(table->attributes);
 
     // Allocation d'un pointeur temporaire pour les index des attributs
-    NodePointer* tmp = INVALID_POINTER; 
+    NodePointer* tmp = INVALID_POINTER;
     NodePointer* root = (NodePointer**) calloc(table->attributeCount, PTR);
     NodePointer* nextFree = (NodePointer**) calloc(table->attributeCount, PTR);
 	assert(root && nextFree);
@@ -259,7 +279,7 @@ Table* Table_load(char* tblPath, char* dataPath) {   //j'ai modif les fileOpen n
 		fread(&nextFree[i], PTR, sizeof(char), tblFile);
         
 		if (root[i] != INVALID_POINTER) {
-			table->attributes[i].index = Index_load(table, i, dataPath, root[i], nextFree[i]);
+			table->attributes[i].index = Index_load(table, i, table->folderPath, root[i], nextFree[i]);
 			
 		}
 		else 
@@ -328,8 +348,8 @@ void Table_search(Table* self, Filter* filter, SetEntry* resultSet) {
     Entry* entry = Entry_create(self);
     EntryPointer ptr = 0;
 
-    if (self->attributes[filter->attributeIndex].index != INVALID_POINTER) {
-        Index* index = self->attributes[filter->attributeIndex].index;
+    Index* index = self->attributes[filter->attributeIndex].index;
+    if (index != INVALID_POINTER) {
         Index_searchRec(index, self->attributes[filter->attributeIndex].index->rootPtr, filter, resultSet);
         return;
     }
@@ -356,14 +376,17 @@ void Table_insertEntry(Table *self, Entry *entry) {
         // Se deplace à l'emplacement libre pour ensuite ecrire l'entry
         fseek(self->dataFile, nodePtr, SEEK_SET);
     }
+
     else {
         fseek(self->dataFile, 0, SEEK_END);
         nodePtr = FTell(self->dataFile);
     }
+
     Table_writeEntry(self, entry, nodePtr);
 
     // Mettre a jour les index
-     
+    
+
     // Mettre a jour le header
     self->entryCount += 1;
 }
@@ -397,8 +420,8 @@ void Table_debugPrint(Table *self) {
     return;
 }
 
-Entry *Entry_create(Table *table)
-{
+Entry *Entry_create(Table *table) {
+
     Entry* entry = (Entry*)calloc(1, sizeof(Entry));
     assert(entry);
 
@@ -430,18 +453,17 @@ void Entry_print(Entry *self) {
 	assert(self);
 
 	printf("\n---------------------\n");
-    printf("Entry : \n");
+	printf("Entry : \n");
 	printf("nombre d'attributes : %d\n", self->attributeCount);
 
-    for (int i = 0; i < self->attributeCount; i++) 
-    {
+	for (int i = 0; i < self->attributeCount; i++)
+	{
 		printf("    T------------\n");
 		printf("    |  - %s\n", self->values[i]);
 	}
 
-	    printf("    L------------\n");
-	
-        printf("nextPtr : %lld \n",self->nextFreePtr);
+	printf("    L------------\n");
 
+	printf("nextPtr : %lld \n", self->nextFreePtr);
 	return;
 }
