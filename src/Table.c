@@ -22,37 +22,36 @@ int Filter_test(Filter *self, char *nodeKey)
             if (cmp1 > 0) res |= FILTER_SEARCH_LEFT;
             break;
 
-    case OP_LT:
-        if (cmp1 < 0) res |= FILTER_FOUND;
-        if (cmp1 >= 0) res |= FILTER_SEARCH_LEFT;
-        break;
+        case OP_LT:
+            if (cmp1 < 0) res |= FILTER_FOUND;
+            if (cmp1 >= 0) res |= FILTER_SEARCH_LEFT;
+            break;
 
-    case OP_LEQ:
-        if (cmp1 <= 0) res |= FILTER_FOUND;
-        if (cmp1 > 0) res |= FILTER_SEARCH_RIGHT;
-        break;
+        case OP_LEQ:
+            if (cmp1 <= 0) res |= FILTER_FOUND;
+            if (cmp1 > 0) res |= FILTER_SEARCH_RIGHT;
+            break;
 
-    case OP_GEQ:
-        if (cmp1 >= 0) res |= FILTER_FOUND;
-        if (cmp1 < 0) res |= FILTER_SEARCH_LEFT;
-        break;
+        case OP_GEQ:
+            if (cmp1 >= 0) res |= FILTER_FOUND;
+            if (cmp1 < 0) res |= FILTER_SEARCH_LEFT;
+            break;
 
-    case OP_GT:
-        if (cmp1 > 0) res |= FILTER_FOUND;
-        if (cmp1 <= 0) res |= FILTER_SEARCH_RIGHT;
-        break;
+        case OP_GT:
+            if (cmp1 > 0) res |= FILTER_FOUND;
+            if (cmp1 <= 0) res |= FILTER_SEARCH_RIGHT;
+            break;
 
-    case OP_BETW:
-        if (cmp1 >= 0 && cmp2 <= 0) res |= FILTER_FOUND;
-        if (cmp1 < 0) res |= FILTER_SEARCH_RIGHT; 
-        if (cmp2 > 0) res |= FILTER_SEARCH_LEFT;
-        break;
+        case OP_BETW:
+            if (cmp1 >= 0 && cmp2 <= 0) res |= FILTER_FOUND;
+            if (cmp1 < 0) res |= FILTER_SEARCH_RIGHT; 
+            if (cmp2 > 0) res |= FILTER_SEARCH_LEFT;
+            break;
 
-    default:
-        assert(false);
-        break;
+        default:
+            assert(false);
+            break;
     }
-
     return res;
 }
 
@@ -192,9 +191,9 @@ void Table_writeHeader(Table* self) {
 
     // Ecriture du nombre d'attribut
     fwrite(&self->attributeCount, INT, 1, tblFile);
-    uint64_t invalidPointer = INVALID_POINTER;
 
     // Ecriture des attributs
+    uint64_t invalidPointer = INVALID_POINTER;
     for (int i = 0; i < self->attributeCount; i++) {
         fwrite(self->attributes[i].name, MAX_NAME_SIZE, 1, tblFile);
         fwrite(&self->attributes[i].size, PTR, 1, tblFile);
@@ -261,7 +260,7 @@ Table* Table_load(char* tblPath, char* dataPath) {   //j'ai modif les fileOpen n
 	assert(table->attributes);
 
     // Allocation d'un pointeur temporaire pour les index des attributs
-    NodePointer* tmp = INVALID_POINTER; 
+    NodePointer* tmp = INVALID_POINTER;
     NodePointer* root = (NodePointer**) calloc(table->attributeCount, PTR);
     NodePointer* nextFree = (NodePointer**) calloc(table->attributeCount, PTR);
 	assert(root && nextFree);
@@ -377,10 +376,12 @@ void Table_insertEntry(Table *self, Entry *entry) {
         // Se deplace à l'emplacement libre pour ensuite ecrire l'entry
         fseek(self->dataFile, nodePtr, SEEK_SET);
     }
+
     else {
         fseek(self->dataFile, 0, SEEK_END);
         nodePtr = FTell(self->dataFile);
     }
+
     Table_writeEntry(self, entry, nodePtr);
 
     // Mettre a jour les index

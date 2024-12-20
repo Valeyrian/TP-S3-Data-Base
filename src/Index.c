@@ -442,6 +442,11 @@ void Index_searchRec(Index* self, NodePointer currentNodePtr, Filter* filter, Se
 	switch (find) {
 	case FILTER_FOUND:
 		SetEntry_insert(resultSet, currentNode.entryPtr);
+
+		// Si il a y plusieur occurence de la meme valeur
+		if (currentNode.leftPtr != INVALID_POINTER) {
+			Index_searchRec(self, currentNode.leftPtr, filter, resultSet);
+		}
 		return;
 
 	case FILTER_SEARCH_RIGHT:
@@ -454,6 +459,9 @@ void Index_searchRec(Index* self, NodePointer currentNodePtr, Filter* filter, Se
 		if (currentNode.leftPtr != INVALID_POINTER) {
 			Index_searchRec(self, currentNode.leftPtr, filter, resultSet);
 		}
+		return;
+
+	default:
 		return;
 	}
 }
