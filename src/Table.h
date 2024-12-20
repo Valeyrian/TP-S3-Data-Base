@@ -10,6 +10,7 @@
 #include "SetEntry.h"
 
 
+
 ///@brief Taille maximale pour le nom d'un attribut ou d'une table.
 #define MAX_NAME_SIZE 64
 #define PTR 8

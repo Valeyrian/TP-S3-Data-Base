@@ -94,11 +94,11 @@ bool chekTableCompatible(Table* table, Table* table2)
 
 void getFileNameWithoutExtension(const char* filePath, char* fileName)
 {
-	// Trouver la dernière occurrence du séparateur de chemin
+	// Trouver la dernière occurrence du separateur de chemin
 	const char* lastSlash = strrchr(filePath, '\\'); // Pour Windows
 	
 
-	// Si aucun séparateur, commencer au début de filePath
+	// Si aucun separateur, commencer au debut de filePath
 	const char* baseName = lastSlash ? lastSlash + 1 : filePath;
 
 	// Trouver la position du dernier point '.'
@@ -111,31 +111,30 @@ void getFileNameWithoutExtension(const char* filePath, char* fileName)
 		fileName[length] = '\0'; // Ajouter le caractère de fin
 	}
 	else {
-		// Pas d'extension trouvée, copier le nom complet
+		// Pas d'extension trouvee, copier le nom complet
 		strcpy(fileName, baseName);
 	}
 }
 
 void getParentDirectory(const char* filePath, char* parentDir)
 {
-	const char* lastSlash = strrchr(filePath, '\\'); // Windows (séparateur `\\`)
+	const char* lastSlash = strrchr(filePath, '\\'); // Windows (separateur `\\`)
 
 	if (lastSlash) {
 
-		size_t length = lastSlash - filePath; // Longueur du chemin du répertoire parent
+		size_t length = lastSlash - filePath; // Longueur du chemin du repertoire parent
 		strncpy(parentDir, filePath, length);
 		parentDir[length] = '\0';
 	}
 	else {
-		strcpy(parentDir, ".");// Si aucun séparateur trouvé, c'est un fichier dans le répertoire courant
+		strcpy(parentDir, ".");// Si aucun separateur trouve, c'est un fichier dans le repertoire courant
 	}
 }
 
 void pauseForUser()
 {
-	printf("Appuyez sur Entrée pour continuer"BLINK_SLOW"...\n"RESET);
-	while (getchar() != '\n'); // Nettoyer le buffer résiduel
-	clearInputBuffer();
+	printf("Appuyez sur Entree pour continuer"BLINK_SLOW"...\n"RESET);
+	while (getchar() != '\n'); // Nettoyer le buffer residuel
 }
 
 void clearInputBuffer() {
@@ -189,14 +188,14 @@ int createFromCSV()
 	bool isEndending = true;
 	FromCsv* fromCsv = calloc(1, sizeof(FromCsv));
 	if (!fromCsv) {
-		fprintf(stderr, "Erreur d'allocation mémoire.\n");
+		fprintf(stderr, "Erreur d'allocation memoire.\n");
 		return -1;
 	}
 
 	fromCsv->CSVpath = calloc(1024, 1);
 	fromCsv->folderPath = calloc(1024, 1);
 	if (!fromCsv->CSVpath || !fromCsv->folderPath) {
-		fprintf(stderr, "Erreur d'allocation mémoire pour les chemins.\n");
+		fprintf(stderr, "Erreur d'allocation memoire pour les chemins.\n");
 		free(fromCsv->CSVpath);
 		free(fromCsv->folderPath);
 		free(fromCsv);
@@ -238,11 +237,11 @@ int createFromCSV()
 			if (fromCsv->valideFile && fromCsv->validFolder) {
 				Table* table = Table_createFromCSV(fromCsv->CSVpath, fromCsv->folderPath);
 				if (table) {
-					Table_debugPrint(table);
-					printf(FG_GREEN "Table créée avec succès.\n" RESET);
+					printf(FG_GREEN "Table creee avec succès.\n" RESET);
+					pauseForUser();
 				}
 				else {
-					printf(FG_RED "Erreur lors de la création de la table.\n" RESET);
+					printf(FG_RED "Erreur lors de la creation de la table.\n" RESET);
 					pauseForUser();
 				}
 				UserEntry = 4;
@@ -288,7 +287,7 @@ int loadDatabase()
 	bool isEndending = true;
 	DataBaseLoad* dbLoad = calloc(1, sizeof(DataBaseLoad));
 	if (!dbLoad) {
-		fprintf(stderr, "Erreur d'allocation mémoire.\n");
+		fprintf(stderr, "Erreur d'allocation memoire.\n");
 		return -1;
 	}
 
@@ -297,7 +296,7 @@ int loadDatabase()
 	dbLoad->idxFolder = calloc(1024, 1);
 
 	if (!dbLoad->tblFile || !dbLoad->datFile || !dbLoad->idxFolder) {
-		fprintf(stderr, "Erreur d'allocation mémoire pour les chemins.\n");
+		fprintf(stderr, "Erreur d'allocation memoire pour les chemins.\n");
 		free(dbLoad->tblFile);
 		free(dbLoad->datFile);
 		free(dbLoad->idxFolder);
@@ -355,7 +354,7 @@ int loadDatabase()
 				if (table)
 				{
 					 Table_debugPrint(table);
-					 int back = actionOnDatabase(table); //passe au menu des action sur la base de donnée
+					 int back = actionOnDatabase(table); //passe au menu des action sur la base de donnee
 					 if (back)
 						 continue;
 					 else
@@ -387,7 +386,7 @@ int loadDatabase()
 
 			break;
 		case 5:
-			printf("Opération annulée.\n");
+			printf("Operation annulee.\n");
 			isEndending = false;
 			break;
 
@@ -476,7 +475,7 @@ int searchInDatabase(Table* table)
 	
 	Filter* filter = calloc(1, sizeof(Filter));
 	if (!filter) {
-		fprintf(stderr, "Erreur d'allocation mémoire.\n");
+		fprintf(stderr, "Erreur d'allocation memoire.\n");
 		return -1;
 	}
 	filter->key1 = calloc(128, sizeof(char));
@@ -484,14 +483,14 @@ int searchInDatabase(Table* table)
 
 	SearchInfo* info = calloc(1, sizeof(SearchInfo));  
 	if (!info) {
-		fprintf(stderr, "Erreur d'allocation mémoire.\n");
+		fprintf(stderr, "Erreur d'allocation memoire.\n");
 		free(filter);
 		return -1;
 	}
 	
 	SetEntry* result = SetEntry_create(); 
 	if (!result) {
-		fprintf(stderr, "Erreur d'allocation mémoire.\n");
+		fprintf(stderr, "Erreur d'allocation memoire.\n");
 		free(filter);
 		free(info);
 		return -1;
@@ -549,7 +548,7 @@ int searchInDatabase(Table* table)
 				}
 				else
 				{
-					printf(FG_RED "Filtre invalide. Veuillez réessayer.\n" RESET);
+					printf(FG_RED "Filtre invalide. Veuillez reessayer.\n" RESET);
 					filter->attributeIndex = 0;
 					filter->requestOp = 0;
 					filter->key1[0] = '\0';
@@ -627,18 +626,25 @@ int searchInDatabase(Table* table)
 			case 2:
 				if (info->matchCount == 0)
 				{
-					printf(FG_RED "Aucun résultat à afficher.\n" RESET); 
+					printf(FG_RED "Aucun resultat à afficher.\n" RESET); 
 					pauseForUser();
 				}
-				if (info->matchCount > 30)
+				if (info->matchCount > 10)
 				{
-					printf(FG_TRUECOLOR(165,98,0) BOLD"Il y a plus de 30 resultats. L'afficahe peut etre long. Voulez-vous les afficher ? (O/n) : "RESET BG_BLACK);
+					printf(FG_TRUECOLOR(165,98,0) BOLD"Il y a plus de 10 resultats. L'afficahe peut etre long. Voulez-vous les afficher ? (O/n) : "RESET BG_BLACK);
 					char c = getchar();
 					clearInputBuffer();
-					if (c == 'O' || c == 'o' || '\n')
+					if (c == 'O' || c == 'o' || c == '\n')
 					{
 						iterPrint(table,result);
 						pauseForUser();
+					}
+					
+					else
+					{
+						printf(FG_GREEN "Affichage annule.\n" RESET);
+						pauseForUser();
+						continue;
 					}
 				}
 				else
@@ -684,7 +690,7 @@ int searchInDatabase(Table* table)
 							i++;
 						}
 
-						printf(FG_GREEN "Résultats sauvegardés avec succès.\n" FG_WHITE); 
+						printf(FG_GREEN "Resultats sauvegardes avec succès.\n" FG_WHITE); 
 						fclose(file);
 						SetEntryIter_destroy(it);
 						pauseForUser();
@@ -740,6 +746,8 @@ int insertInDatabase(Table* table)
 	int UserEntry = 0;
 	Entry* oneEntry = Entry_create(table);
 
+	Table* tableSource = NULL; 
+
 
 
 	while (isEndending)
@@ -781,12 +789,69 @@ int insertInDatabase(Table* table)
 
 		case 3 : 
 			printf("Vous allez entrer les informations concernant le fichier CSV d'entree ");
-			mergeFromCSV(table);
-
+			 
+			 if (mergeFromCSV(table))
+				 continue;
+			 else
 
 			break;
 
 		case 4 :
+			printf(FG_CYAN"Vous allez entrer les informations concernant la table d'entree : \n"FG_WHITE); 
+			
+			entryInput :
+			printf("Entrez le chemin du fichier .tbl : ");
+			char tblFile[1024] = { '\0' };
+			char datFile[1024] = { '\0' };
+			scanf("%s", tblFile);	
+			clearInputBuffer(); 
+			printf(FG_YELLOW ITALIC "%s\n"RESET BG_BLACK, tblFile);	  
+			printf("Entrez le chemin du fichier .dat : ");
+			scanf("%s", datFile); 
+			clearInputBuffer(); 
+			printf(FG_YELLOW ITALIC "%s\n"RESET BG_BLACK, datFile);
+
+			if (checkFile(datFile) && checkFile(tblFile) )
+			{
+				tableSource = Table_load(tblFile, datFile); 
+				if (tableSource)
+				{
+					if (chekTableCompatible(table, tableSource))
+					{
+						if (mergeTwoDataBase(table, tableSource))
+						{
+						printf(FG_GREEN "Table fusionnee avec succès.\n" RESET); 
+						}
+						else
+						{
+							printf(FG_RED "Erreur lors de la fusion des tables.\n" RESET); 
+						}
+						pauseForUser();
+					}
+					else
+					{
+						printf(FG_RED "Les tables ne sont pas compatibles.\n" RESET);
+						Table_destroy(tableSource);
+					} 
+				}
+				else
+				{
+					printf(FG_RED "Erreur lors du chargement de la table.\n" RESET); 
+				}
+
+			}
+			else
+			{
+				printf(FG_RED "Le fichier .tbl ou .dat est invalide ou inaccessible.\n" RESET);
+				printf(FG_RED "Voulez-vous reessayer ? (O/n) : " RESET);
+				char c = getchar();
+				clearInputBuffer();
+				if (c == 'O' || c == 'o' || c=='/n')
+					goto entryInput;
+				else
+					continue;
+			}
+
 			break;
 
 		case 5 :
@@ -806,7 +871,7 @@ int insertInDatabase(Table* table)
 	}
 end:
 	Entry_destroy(oneEntry);
-	return UserEntry == 4 ? 1 : 0;
+	return UserEntry == 5 ? 1 : 0;
 }
 
 void insertMultipleEntryFromUser(Table* table)
@@ -837,8 +902,17 @@ void insertMultipleEntryFromUser(Table* table)
 		}
 		else
 		{
-			printf(FG_RED"Entree invalide. Veuillez reessayer.\n");
-			goto scanEntry;
+			printf(FG_RED"Entree invalide.\n");
+			printf(FG_RED"Voulez-vous reessayer ? (O/n) : "FG_WHITE);
+			char c = getchar();
+			clearInputBuffer();
+			if (c == 'N' || c == 'n')
+			{
+				isEndending = false;
+				goto end;
+			}
+			else
+				goto scanEntry;
 		}
 		printf(FG_TRUECOLOR(165,98,0)"Voulez-vous ajouter une autre entree ? (O/n) : "FG_WHITE);
 		char c = getchar();
@@ -848,7 +922,10 @@ void insertMultipleEntryFromUser(Table* table)
 			isEndending = false;
 		}
 	}
+end:	
 	Entry_destroy(oneEntry);
+
+	
 }
 
 int mergeFromCSV(Table *table)
@@ -857,14 +934,14 @@ int mergeFromCSV(Table *table)
 	bool isEndending = true;
 	FromCsv* fromCsv = calloc(1, sizeof(FromCsv));
 	if (!fromCsv) {
-		fprintf(stderr, "Erreur d'allocation mémoire.\n");
+		fprintf(stderr, "Erreur d'allocation memoire.\n");
 		return -1;
 	}
 
 	fromCsv->CSVpath = calloc(1024, 1);
 	fromCsv->folderPath = calloc(1024, 1);
 	if (!fromCsv->CSVpath || !fromCsv->folderPath) {
-		fprintf(stderr, "Erreur d'allocation mémoire pour les chemins.\n");
+		fprintf(stderr, "Erreur d'allocation memoire pour les chemins.\n");
 		free(fromCsv->CSVpath);
 		free(fromCsv->folderPath);
 		free(fromCsv);
@@ -901,8 +978,8 @@ int mergeFromCSV(Table *table)
 				Table* tableFromCsv = Table_createFromCSV(fromCsv->CSVpath, fromCsv->folderPath);
 
 				if (tableFromCsv) {
-					Table_debugPrint(tableFromCsv);
-					printf(FG_GREEN "Table créée avec succès.\n" RESET);
+					//Table_debugPrint(tableFromCsv);
+					printf(FG_GREEN "Table creee avec succès.\n" RESET);
 					
 					int back = mergeTwoDataBase(table, tableFromCsv);
 
@@ -916,8 +993,8 @@ int mergeFromCSV(Table *table)
 						printf(FG_RED"Erreur lors de la fusion du Csv avec la Table\n"FG_WHITE);
 					}
 					
-					printf(FG_GREEN "CSV fusionnée avec succès.\n" RESET);
-
+					printf(FG_GREEN "CSV fusionnee avec succès.\n" RESET);
+					pauseForUser();
 					char filePath[1024] = { '\0' }; //on nettoie les traces de notre passage
 					snprintf(filePath, 1024, "%s/%s.tbl", fromCsv->folderPath, tableFromCsv->name);
 					remove(filePath);
@@ -931,7 +1008,7 @@ int mergeFromCSV(Table *table)
 
 				}
 				else {
-					printf(FG_RED "Erreur lors de la création de la table.\n" RESET);
+					printf(FG_RED "Erreur lors de la creation de la table.\n" RESET);
 					pauseForUser();
 					goto end;
 				}
@@ -973,7 +1050,6 @@ end:
 	return UserEntry == 4 ? 1 : 0;
 }
 
-
 int mergeTwoDataBase(Table* dest, Table* source)
 {
 	
@@ -990,7 +1066,7 @@ int mergeTwoDataBase(Table* dest, Table* source)
 
 		for (int j = 0; j < source->attributeCount; j++) //pour chque entres on recupere les attributs 
 		{
-			memset(oneEntry->values[j], 0, source->attributes[j].size); //+1 pour le dernier char
+			memset(oneEntry->values[j], 0, source->attributes[j].size); 
 		}
 		Table_readEntry(source, oneEntry, i*source->entrySize);  //on insert l'entree dans la table
 		printf("val 0: %s \n", oneEntry->values[0]);

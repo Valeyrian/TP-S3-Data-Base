@@ -237,7 +237,7 @@ void actionOnDatabasePrint(Table *table)
 
     printf("    3. Supprimer une entree dans la BDD.\n");
 
-    printf("    4. Afficher la BDD "FG_RED"/!\\ Attention cela peut etre long. /!\\ \n"RESET);
+    printf("    4. Afficher la BDD  "FG_RED"/!\\ Attention cela peut etre long. /!\\ \n"RESET);
     
     printf("    5. Retour\n");
     
@@ -398,9 +398,9 @@ void insertInDatabasePrint(Table* table)
 
 	printf("    4. Ajouter plusieurs entree depuis une autre table\n");
 
-	printf("    4. Retour\n");
+	printf("    5. Retour\n");
 
-	printf("    5. Quiter\n");
+	printf("    6. Quiter\n");
 
 
 

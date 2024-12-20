@@ -165,7 +165,9 @@ void Index_destroy(Index* self)
 
 Index* Index_load(Table* table, int attributeIndex, char* path, NodePointer rootPtr, NodePointer nextFreePtr) {
 
-	FILE* indexFile = fopen(path, "rb+");
+	char indexPath[256]; 
+	snprintf(indexPath, 256, "%s/%s_%d.idx", path, table->name, attributeIndex); 
+	FILE* indexFile = fopen(indexPath, "rb+"); 
 	assert(indexFile);
 
 	Index* index = (Index*)calloc(1, sizeof(Index));
@@ -178,11 +180,11 @@ Index* Index_load(Table* table, int attributeIndex, char* path, NodePointer root
 	index->rootPtr = rootPtr;
 	index->nextFreePtr = nextFreePtr;
 
-	printf("\nIndex %d loaded\n", attributeIndex);
+	/*printf("\nIndex %d loaded\n", attributeIndex);
 	printf("	- RootPtr: %lld\n", index->rootPtr != INVALID_POINTER ? index->rootPtr : -1);
 	printf("	- NextFreePtr: %lld\n", index->nextFreePtr != INVALID_POINTER ? index->nextFreePtr : -1);
 	printf("	- AttributeSize: %lld\n", index->attributeSize);
-	printf("	- AttributeIndex: %d\n", index->attributeIndex);
+	printf("	- AttributeIndex: %d\n", index->attributeIndex);*/
 
 	return index;
 }
@@ -448,23 +450,16 @@ void Index_searchRec(Index* self, NodePointer currentNodePtr, Filter* filter, Se
 	Index_readNode(self, &currentNode, currentNodePtr);
 	int find = Filter_test(filter, currentNode.key);
 
-	switch (find) {
-	case FILTER_FOUND:
+	if (find & FILTER_FOUND)
 		SetEntry_insert(resultSet, currentNode.entryPtr);
-		break;
 
-	case FILTER_SEARCH_RIGHT:
-		if (currentNode.rightPtr != INVALID_POINTER) {
+	if (find & FILTER_SEARCH_RIGHT)
+		if (currentNode.rightPtr != INVALID_POINTER)
 			Index_searchRec(self, currentNode.rightPtr, filter, resultSet);
-		}
-		break;
 
-	case FILTER_SEARCH_LEFT:
-		if (currentNode.leftPtr != INVALID_POINTER) {
+	if (find & FILTER_SEARCH_LEFT)
+		if (currentNode.leftPtr != INVALID_POINTER)
 			Index_searchRec(self, currentNode.leftPtr, filter, resultSet);
-		}
-		break;
-	}
 }
 
 NodePointer Index_searchEntryRec(Index* self, char* key, EntryPointer entryPtr, NodePointer nodePtr) {

@@ -20,7 +20,7 @@ int main(int argc, char** argv)
 #endif
 
 
-#if 0
+#if 1
 int main() { 
     int res = 0;
     int choice = 0;
@@ -59,7 +59,7 @@ int main() {
 }
 #endif
 
-#if 1
+#if 0
 // Exemple de main() :
 // Création d'une table à partir d'un CSV.
 int main(int argc, char** argv) {
